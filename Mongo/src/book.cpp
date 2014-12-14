@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Book::Book()
+my::Book::Book()
 {
 	m_nBookId = 0;
     memset(m_szBookNo, 0, sizeof(m_szBookNo));
@@ -17,7 +17,7 @@ Book::Book()
     m_dPrice = 0;
 }
 
-Book::Book(int bookId, const char* bookNo, int stock, double price)
+my::Book::Book(int bookId, const char* bookNo, int stock, double price)
 {
 	m_nBookId = bookId;
     strncpy(m_szBookNo, bookNo, sizeof(m_szBookNo));
@@ -26,7 +26,7 @@ Book::Book(int bookId, const char* bookNo, int stock, double price)
     m_dPrice = price;
 }
 
-Book::~Book()
+my::Book::~Book()
 {
 	m_nBookId = 0;
 	memset(m_szBookNo, 0, sizeof(m_szBookNo));
@@ -34,42 +34,42 @@ Book::~Book()
 	m_dPrice = 0;
 }
 
-int Book::getBookId() const
+int my::Book::getBookId() const
 {
 	return m_nBookId;
 }
 
-double Book::getPrice() const
+double my::Book::getPrice() const
 {
     return m_dPrice;
 }
 
-int Book::getStock() const
+int my::Book::getStock() const
 {
     return m_nStock;
 }
 
-const char* Book::getBookNo() const
+const char* my::Book::getBookNo() const
 {
     return m_szBookNo;
 }
 
-void Book::setPrice(double price)
+void my::Book::setPrice(double price)
 {
     m_dPrice = price;
 }
 
-void Book::setStock(int stock)
+void my::Book::setStock(int stock)
 {
     m_nStock = stock;
 }
 
-void Book::setBookNo(const char* bookNo)
+void my::Book::setBookNo(const char* bookNo)
 {
     strncmp(m_szBookNo, bookNo, sizeof(m_szBookNo));
 }
 
-void Book::addStock(int num)
+void my::Book::addStock(int num)
 {
 	if (num <= 0)
 	{
@@ -78,7 +78,7 @@ void Book::addStock(int num)
 	m_nStock += num;
 }
 
-bool Book::minusStock(int num)
+bool my::Book::minusStock(int num)
 {
 	if (num <= 0)
 	{
@@ -92,24 +92,24 @@ bool Book::minusStock(int num)
 	return true;
 }
 
-Book::ptr Book::create()
+my::Book::ptr my::Book::create()
 {
 	void* m = nedalloc::nedmalloc(sizeof(Book));
 	return ptr(new(m) Book(),destroy);
 }
 
-Book::ptr Book::create(int bookId, const char* bookNo, int stock, double price)
+my::Book::ptr my::Book::create(int bookId, const char* bookNo, int stock, double price)
 {
 	void* m = nedalloc::nedmalloc(sizeof(Book));
 	return ptr(new(m) Book(bookId, bookNo, stock, price),destroy);
 }
 
-void Book::destroy(Book* p)
+void my::Book::destroy(Book* p)
 {
 	nedalloc::nedfree(p);
 }
 
-Json::Value Book::toJson()
+Json::Value my::Book::toJson()
 {
 	Json::Value ret;
 	ret[db::Book::bookId] = m_nBookId;

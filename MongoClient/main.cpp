@@ -6,6 +6,7 @@ using namespace boost::asio;
 
 int main()
 {
+
 	std::vector<boost::shared_ptr<boost::thread>> m_ServiceThreads;
 	
 	io_service* vIos[1000];
@@ -14,8 +15,8 @@ int main()
 	for (int i = 0; i < 250; i++)
 	{
 		vIos[i] = new io_service();
-		vEndPoint[i] = new ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 10086);
-		
+		//vEndPoint[i] = new ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 10086);
+		vEndPoint[i] = new ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 10085);
 		TcpClient::ptr cli(new TcpClient(*vIos[i], *vEndPoint[i]));
 		vClient.push_back(cli);
 		vClient[i]->post_connect();

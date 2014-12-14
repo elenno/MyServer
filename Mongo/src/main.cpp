@@ -9,16 +9,16 @@
 #include "client/dbclient.h"
 #include "bson/bsonobj.h"
 #include "../head/bookStoreMgr.h"
-#include "../head/message.h"
 #include <boost/asio.hpp>
 #include <string>
 #include<string.h>
-#include "../head/tcpServer.h"
+#include "tcpServer.h"
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/basic_endpoint.hpp>
-#include "../common/file_system.h"
-#include "../common/log_system.h"
+#include "file_system.h"
+#include "log_system.h"
 #include "../head/mongoMgr.h"
+#include "../head/gameServer.h"
 #pragma comment(lib,"ws2_32.lib")
 using namespace mongo;
 using namespace std;
@@ -44,9 +44,8 @@ int main()
 
 	try
 	{
-		boost::asio::io_service io_service;
-		boost::asio::ip::tcp::endpoint en(boost::asio::ip::address::from_string("127.0.0.1"), 10086);
-		TcpServer server(io_service, en);
+		my::GameServer server;
+		server.init();
 		server.run();
 		
 		{

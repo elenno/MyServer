@@ -6,20 +6,20 @@
  */
 
 #include "../head/mongoMgr.h"
-#include "../head/helpFunctions.h"
+#include "helpFunctions.h"
 
 
-MongoMgr::MongoMgr()
+my::MongoMgr::MongoMgr()
 {
 	//connectDB("127.0.0.1");
 }
 
-MongoMgr::~MongoMgr()
+my::MongoMgr::~MongoMgr()
 {
 
 }
 
-bool MongoMgr::connectDB(const char* ip)
+bool my::MongoMgr::connectDB(const char* ip)
 {
 	string errorMsg;
 	bool res = m_MongoConn.connect(ip, errorMsg);
@@ -30,13 +30,13 @@ bool MongoMgr::connectDB(const char* ip)
 	return res;
 }
 
-bool MongoMgr::saveJson(const string& col_name, string& query, string& obj)
+bool my::MongoMgr::saveJson(const string& col_name, string& query, string& obj)
 {
 	string colName;
 	try
 	{
-		string queryStr = helpFunc.tighten(query);
-		string objStr = helpFunc.tighten(obj);
+		string queryStr = my::HelpFunctions::tighten(query);
+		string objStr = my::HelpFunctions::tighten(obj);
 		colName = build_db_name(col_name);
 		m_MongoConn.update(colName, mongo::Query(queryStr), mongo::fromjson(objStr), true);//upsert为true则找不到则插入
 	}
@@ -49,14 +49,14 @@ bool MongoMgr::saveJson(const string& col_name, string& query, string& obj)
 	return true;
 }
 
-bool MongoMgr::saveJson2(const string& col_name, Json::Value& query, Json::Value& obj)
+bool my::MongoMgr::saveJson2(const string& col_name, Json::Value& query, Json::Value& obj)
 {
-	string queryStr = helpFunc.tighten(query.toStyledString());
-	string objStr = helpFunc.tighten(obj.toStyledString());
+	string queryStr = my::HelpFunctions::tighten(query.toStyledString());
+	string objStr = my::HelpFunctions::tighten(obj.toStyledString());
 	return saveJson(col_name, queryStr, objStr);
 }
 
-int MongoMgr::db_count(const string& col_name, string query  /*= "" */)
+int my::MongoMgr::db_count(const string& col_name, string query  /*= "" */)
 {
 	string colName = build_db_name(col_name);
 	printf("db_count: dbname:%s", col_name.c_str());
@@ -67,7 +67,7 @@ int MongoMgr::db_count(const string& col_name, string query  /*= "" */)
 	}
 	try{
 		return m_MongoConn.count(colName);
-	}catch(DBException& e)
+	}catch(mongo::DBException& e)
 	{
 		printf("caught exception: %s\n", e.what());
 		printf("for dbname:%s , query:%s\n", colName.c_str(), query.c_str());
@@ -75,38 +75,38 @@ int MongoMgr::db_count(const string& col_name, string query  /*= "" */)
 	}
 }
 
-Json::Value MongoMgr::findJson(const string& col_name, string& query)
+Json::Value my::MongoMgr::findJson(const string& col_name, string& query)
 {
-	string queryStr = helpFunc.tighten(query);
+	string queryStr = my::HelpFunctions::tighten(query);
 	Json::Value ret;
 	Json::Reader reader;
 	string colName = build_db_name(col_name);
 	try{
-		BSONObj obj = m_MongoConn.findOne(colName, queryStr);
+		mongo::BSONObj obj = m_MongoConn.findOne(colName, queryStr);
 		reader.parse(obj.jsonString(), ret);
 		//printf("%s : %s  %s\n", __FUNCTION__, obj.jsonString().c_str(), queryStr.c_str());
-	}catch(DBException& e)
+	}catch(mongo::DBException& e)
 	{
 		printf("%s| caught exception: %s\n", __FUNCTION__, e.what());
 	}	
 	return ret;
 }
 
-Json::Value MongoMgr::findJson(const string& col_name, Json::Value& queryJson)
+Json::Value my::MongoMgr::findJson(const string& col_name, Json::Value& queryJson)
 {
-	string query = helpFunc.tighten(queryJson.toStyledString());
+	string query = my::HelpFunctions::tighten(queryJson.toStyledString());
 	return findJson(col_name, query);
 }
 
-Json::Value MongoMgr::findJson(const string& col_name)
+Json::Value my::MongoMgr::findJson(const string& col_name)
 {
 	Json::Value ret = Json::arrayValue;
 	string colName = build_db_name(col_name);
-	std::auto_ptr< DBClientCursor > cursor = m_MongoConn.query(colName);
+	std::auto_ptr< mongo::DBClientCursor > cursor = m_MongoConn.query(colName);
 	try{
 		while(cursor->more())
 		{
-			BSONObj obj = cursor->next();
+			mongo::BSONObj obj = cursor->next();
 			Json::Reader reader;
 			string tmp = obj.jsonString();
 			Json::Value p;
@@ -115,14 +115,14 @@ Json::Value MongoMgr::findJson(const string& col_name)
 				ret.append(p);
 			}
 		}
-	}catch(DBException& e)
+	}catch(mongo::DBException& e)
 	{
 		printf("%s| caught exception: %s\n", __FUNCTION__, e.what());
 	}
 	return ret;
 }
 
-string MongoMgr::build_db_name(const string& str)
+string my::MongoMgr::build_db_name(const string& str)
 {
 	string db_name = db::DataBase::dbName + "." + str;
 	return db_name;

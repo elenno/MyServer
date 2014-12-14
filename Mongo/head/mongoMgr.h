@@ -13,29 +13,29 @@
 #include <client/dbclient.h>
 #include "json/json.h"
 
-#define mongoMgr boost::detail::thread::singleton<MongoMgr>::instance()
+#define mongoMgr boost::detail::thread::singleton<my::MongoMgr>::instance()
 
-using namespace mongo;
-
-class MongoMgr
+namespace my
 {
-public:
-	MongoMgr();
-	~MongoMgr();
+	class MongoMgr
+	{
+	public:
+		MongoMgr();
+		~MongoMgr();
 
-	bool connectDB(const char* ip);
-	bool saveJson(const string& col_name, string& query, string& obj);
-	bool saveJson2(const string& col_name, Json::Value& query, Json::Value& obj);
-	int db_count(const string& col_name, string query = "");
-    Json::Value findJson(const string& col_name, string& query);
-    Json::Value findJson(const string& col_name, Json::Value& queryJson);
-    Json::Value findJson(const string& col_name);
-   
-private:
-	string build_db_name(const string& str);
+		bool connectDB(const char* ip);
+		bool saveJson(const string& col_name, string& query, string& obj);
+		bool saveJson2(const string& col_name, Json::Value& query, Json::Value& obj);
+		int db_count(const string& col_name, string query = "");
+		Json::Value findJson(const string& col_name, string& query);
+		Json::Value findJson(const string& col_name, Json::Value& queryJson);
+		Json::Value findJson(const string& col_name);
 
-	DBClientConnection m_MongoConn;
-};
+	private:
+		string build_db_name(const string& str);
 
+		mongo::DBClientConnection m_MongoConn;
+	};
+}
 
 #endif /* MONGOMGR_H_ */

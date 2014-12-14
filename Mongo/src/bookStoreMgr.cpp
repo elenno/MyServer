@@ -7,13 +7,13 @@
 
 #include "../head/bookStoreMgr.h"
 #include "../head/mongoMgr.h"
-#include "../head/funcHandler.h"
-#include "../common/log_system.h"
-#include "../head/helpFunctions.h"
+#include "funcHandler.h"
+#include "log_system.h"
+#include "helpFunctions.h"
 
 using namespace std;
 
-BookStoreMgr::BookStoreMgr()
+my::BookStoreMgr::BookStoreMgr()
 {
 	printf("Init BookStoreMgr\n");
     m_BookMap.clear();
@@ -23,14 +23,14 @@ BookStoreMgr::BookStoreMgr()
 	registFunc();
 }
 
-BookStoreMgr::~BookStoreMgr()
+my::BookStoreMgr::~BookStoreMgr()
 {
     m_BookMap.clear();
 	m_BookNoMap.clear();
     m_dMoney = 0;
 }
 
-bool BookStoreMgr::sold(string bookNo, int num, double money)
+bool my::BookStoreMgr::sold(string bookNo, int num, double money)
 {
     int bookId = getIdFromBookNo(bookNo);
     BookMap::iterator it = m_BookMap.find(bookId);
@@ -58,7 +58,7 @@ bool BookStoreMgr::sold(string bookNo, int num, double money)
     return true;
 }
 
-bool BookStoreMgr::stock(string bookNo, int num, double cost)
+bool my::BookStoreMgr::stock(string bookNo, int num, double cost)
 {
 	if (cost > m_dMoney)
 	{
@@ -82,7 +82,7 @@ bool BookStoreMgr::stock(string bookNo, int num, double cost)
 	return true;
 }
 
-bool BookStoreMgr::setNewBook(string bookNo, double price, int num, double cost)
+bool my::BookStoreMgr::setNewBook(string bookNo, double price, int num, double cost)
 {
 	if (m_dMoney < cost)
 	{
@@ -108,7 +108,7 @@ bool BookStoreMgr::setNewBook(string bookNo, double price, int num, double cost)
 	return true;
 }
 
-bool BookStoreMgr::saveBookToDB(int bookId)
+bool my::BookStoreMgr::saveBookToDB(int bookId)
 {
 	BookMap::iterator it = m_BookMap.find(bookId);
 	if (it == m_BookMap.end())
@@ -125,7 +125,7 @@ bool BookStoreMgr::saveBookToDB(int bookId)
 	return true;
 }
 
-int BookStoreMgr::getIdFromBookNo(string bookNo)
+int my::BookStoreMgr::getIdFromBookNo(string bookNo)
 {
 	BookNoMap::iterator it = m_BookNoMap.find(bookNo);
 	if (it == m_BookNoMap.end())
@@ -136,12 +136,12 @@ int BookStoreMgr::getIdFromBookNo(string bookNo)
 	return it->second;
 }
 
-int BookStoreMgr::getBookCount()
+int my::BookStoreMgr::getBookCount()
 {
 	return mongoMgr.db_count(db::Book::colName);
 }
 
-Json::Value BookStoreMgr::findBook(int bookId)
+Json::Value my::BookStoreMgr::findBook(int bookId)
 {
 	Json::Value key;
 	key[db::Book::bookId] = bookId;
@@ -149,7 +149,7 @@ Json::Value BookStoreMgr::findBook(int bookId)
 	return ret;
 }
 
-bool BookStoreMgr::loadFromDB()
+bool my::BookStoreMgr::loadFromDB()
 {
 	Json::Value key;
 	key[db::DataBase::system] = db::DataBase::system;
@@ -181,7 +181,7 @@ bool BookStoreMgr::loadFromDB()
 	return true;
 }
 
-bool BookStoreMgr::saveBookStore()
+bool my::BookStoreMgr::saveBookStore()
 {
 	Json::Value key;
 	Json::Value json;
@@ -194,7 +194,7 @@ bool BookStoreMgr::saveBookStore()
 	return true;
 }
 
-void BookStoreMgr::show()
+void my::BookStoreMgr::show()
 {
 	printf("BookStore: money=%.2f\n", m_dMoney);
     BookMap::iterator it = m_BookMap.begin();
@@ -205,7 +205,7 @@ void BookStoreMgr::show()
 	}
 }
 
-void BookStoreMgr::registFunc()
+void my::BookStoreMgr::registFunc()
 {
 	RegistFunc(api::SHOW_BOOK_LIST_REQ, api::SHOW_BOOK_LIST_RSP, BookStoreMgr::showReq);
 	//RegistFunc(api::SET_NEW_BOOK_REQ, BookStoreMgr::setNewBookReq);
@@ -213,7 +213,7 @@ void BookStoreMgr::registFunc()
 	//RegistFunc(api::STOCK_OLD_BOOK_REQ, BookStoreMgr::stockReq);
 }
 
-bool BookStoreMgr::showReq(Json::Value& req, Json::Value& rsp)
+bool my::BookStoreMgr::showReq(Json::Value& req, Json::Value& rsp)
 {
 	Json::Value data = Json::arrayValue;
 	BookMap::iterator it = m_BookMap.begin();
@@ -229,21 +229,21 @@ bool BookStoreMgr::showReq(Json::Value& req, Json::Value& rsp)
 	}
 	rsp["data"] = data;
 
-	LogD << helpFunc.tighten(rsp.toStyledString()) << LogEnd;
+	LogD << my::HelpFunctions::tighten(rsp.toStyledString()) << LogEnd;
 	return true;
 }
 
-bool BookStoreMgr::setNewBookReq(Json::Value& req, Json::Value& rsp)
+bool my::BookStoreMgr::setNewBookReq(Json::Value& req, Json::Value& rsp)
 {
 	return true;
 }
 
-bool BookStoreMgr::stockReq(Json::Value& req, Json::Value& rsp)
+bool my::BookStoreMgr::stockReq(Json::Value& req, Json::Value& rsp)
 {
 	return true;
 }
 
-bool BookStoreMgr::soldReq(Json::Value& req, Json::Value& rsp)
+bool my::BookStoreMgr::soldReq(Json::Value& req, Json::Value& rsp)
 {
 	return true;
 }
