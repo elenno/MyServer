@@ -1,0 +1,5 @@
+{
+    "port":10085,
+	"gameSvrIp":"127.0.0.1",
+	"gameSvrPort":10086
+}
