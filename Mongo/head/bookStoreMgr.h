@@ -11,7 +11,7 @@
 #include <boost/thread/detail/singleton.hpp>
 #include "../head/book.h"
 #include "nedmalloc/nedmalloc.h"
-#include "../common/common.h"
+#include "common.h"
 #include "json/json.h"
 
 using namespace std;

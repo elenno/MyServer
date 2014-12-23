@@ -35,8 +35,8 @@ namespace my
 		std::vector<boost::shared_ptr<boost::thread>> m_ServiceThreads;
 		boost::recursive_mutex mtx;
 		EndpointPtr m_pEndpoint;
-		boost::shared_ptr<io_service> m_pService;
-		boost::shared_ptr<ip::tcp::acceptor> m_pAcceptor;
+		ServicePtr m_pService;
+		AcceptorPtr m_pAcceptor;
 	};
 }
 

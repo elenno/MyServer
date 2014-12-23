@@ -2,12 +2,17 @@
 #include "../head/mongoMgr.h"
 #include "helpFunctions.h"
 #include "log_system.h"
+#include "funcHandler.h"
+#include "stringDef.h"
+#include "protocol.h"
 
 my::PlayerMgr::PlayerMgr()
 {
 	m_PlayerInfoMap.clear();
 	m_NickNameMap.clear();  
 	//read all players' data
+
+	regFunc();
 }
 
 my::PlayerMgr::~PlayerMgr()
@@ -16,19 +21,31 @@ my::PlayerMgr::~PlayerMgr()
 	m_NickNameMap.clear();
 }
 
-void my::PlayerMgr::newPlayer(int playerId)
+void my::PlayerMgr::regFunc()
+{
+	RegistFunc(my::protocol::CREATE_ROLE_REQ, my::protocol::CREATE_ROLE_RSP, PlayerMgr::createRoleReq);
+	RegistFunc(my::protocol::ENTER_GAME_REQ, my::protocol::ENTER_GAME_RSP, PlayerMgr::createRoleReq);
+}
+
+void my::PlayerMgr::newPlayer(int playerId, std::string nickname)
 {
 	if (m_PlayerInfoMap.find(playerId) != m_PlayerInfoMap.end())
 	{
 		//error
 		return;
 	}
+	if (m_NickNameMap.find(nickname) != m_NickNameMap.end())
+	{
+		//error
+		return;
+	}
 	Json::Value player;
 	player[db::Player::playerId] = playerId;
-	player[db::Player::nickName] = "";
+	player[db::Player::nickName] = nickname;
 	player[db::Player::level] = 1;
 	player[db::Player::vip] = 0;
 	m_PlayerInfoMap.insert(std::make_pair<int, Json::Value>(playerId, player));
+    savePlayer(playerId, player);
 }
 
 bool my::PlayerMgr::findPlayer(int playerId, Json::Value& json)
@@ -80,3 +97,33 @@ bool my::PlayerMgr::savePlayer(int playerId, Json::Value& json)
 	return true;
 }
 
+bool my::PlayerMgr::createRoleReq(Json::Value& req, Json::Value& rsp, int playerId)
+{
+	if (!req["msg"].isArray() || req["msg"].size() < 1)
+	{
+		//参数个数不对
+		rsp["msg"][0u] = -1;
+	    return false;
+	}
+	if (!req["msg"][0u].isString())
+	{
+		//参数格式不对
+		rsp["msg"][0u] = -1;
+		return false;
+	}
+
+	std::string nickname = req["msg"][0u].asString();
+	
+	int playerCount = m_PlayerInfoMap.size();
+	int newPlayerId = playerCount + 1;
+	newPlayer(newPlayerId, nickname);
+	
+	rsp["msg"][0u] = 0;
+	rsp["msg"][1u] = newPlayerId;
+	return true;
+}
+
+bool my::PlayerMgr::enterGameReq(Json::Value& req, Json::Value& rsp, int playerId)
+{
+	return true;
+}

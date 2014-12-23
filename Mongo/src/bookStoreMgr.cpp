@@ -10,6 +10,7 @@
 #include "funcHandler.h"
 #include "log_system.h"
 #include "helpFunctions.h"
+#include "stringDef.h"
 
 using namespace std;
 
@@ -207,7 +208,7 @@ void my::BookStoreMgr::show()
 
 void my::BookStoreMgr::registFunc()
 {
-	RegistFunc(api::SHOW_BOOK_LIST_REQ, api::SHOW_BOOK_LIST_RSP, BookStoreMgr::showReq);
+	//RegistFunc(api::SHOW_BOOK_LIST_REQ, api::SHOW_BOOK_LIST_RSP, BookStoreMgr::showReq);
 	//RegistFunc(api::SET_NEW_BOOK_REQ, BookStoreMgr::setNewBookReq);
 	//RegistFunc(api::SELL_BOOK_REQ, BookStoreMgr::soldReq);
 	//RegistFunc(api::STOCK_OLD_BOOK_REQ, BookStoreMgr::stockReq);

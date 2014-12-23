@@ -45,10 +45,11 @@ void my::LogSystem::outputLogToFile(std::string dir, std::string content)
 	std::stringstream ss;
 	std::fstream fs;
 	ss << dir << (1900 + pnow->tm_year) << zero(pnow->tm_mon + 1) << (pnow->tm_mon + 1) << zero(pnow->tm_mday) << pnow->tm_mday << zero(pnow->tm_hour) << pnow->tm_hour << ".log";
-	std::cout << ss.str();
 	fs.open(ss.str(), std::ios::out | std::ios::app);
 	fs << content << std::endl;
+	std::cout << content << std::endl;
 	fs.close();
+
 }
 
 void my::LogSystem::preLog(const char* fileName, const char* funcName)
@@ -65,4 +66,5 @@ void my::LogSystem::endline()
 	//logThread.detach();
 	outputLogToFile(m_szLogPath, m_SStream.str());
 	m_SStream.str("");
+	setColor(LogSystem::GRAY);
 }

@@ -9,8 +9,8 @@
 #define __MONGO_MGR_H__
 
 #include <boost/thread/detail/singleton.hpp>
-#include "../common/common.h"
 #include <client/dbclient.h>
+#include "common.h"
 #include "json/json.h"
 
 #define mongoMgr boost::detail::thread::singleton<my::MongoMgr>::instance()

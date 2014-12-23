@@ -9,7 +9,7 @@ namespace my
 	class NetMessage
 	{
 	public:
-		NetMessage(std::string& json_str, int proto);
+		NetMessage(std::string& json_str, int proto, int playerId);
 		NetMessage();
 		~NetMessage();
 
@@ -18,11 +18,14 @@ namespace my
 		int getLen();
 		void setProto(int protoId);
 		int getProto();
+		void setPlayerId(int playerId);
+		int getPlayerId();
 		void serialize();
 		bool deserialize(const char* buff, int size);
 		const char* getStream();
 
 	private:
+		int m_nPlayerId;
 		int m_nLen;
 		int m_nProto;
 		std::string m_szMessage;

@@ -13,7 +13,7 @@
 
 #define RegistFunc(REQUEST_PROTOCOL, RESPONSE_PROTOCOL, FUNCTION) \
 {\
-	funcHandlerMgr.registFuncHandler(REQUEST_PROTOCOL, RESPONSE_PROTOCOL, boost::bind(&FUNCTION,this,_1,_2));\
+	funcHandlerMgr.registFuncHandler(REQUEST_PROTOCOL, RESPONSE_PROTOCOL, boost::bind(&FUNCTION,this,_1,_2,_3));\
 }
 
 namespace my
@@ -21,7 +21,7 @@ namespace my
 	class FuncHandler
 	{
 	public:
-		typedef boost::function<bool (Json::Value&, Json::Value&)> HandlerFunc;
+		typedef boost::function<bool (Json::Value&, Json::Value&, int)> HandlerFunc;
 		typedef std::map<int, HandlerFunc> HandlerMap;
 		typedef std::map<int, int> ProtoMap;
 

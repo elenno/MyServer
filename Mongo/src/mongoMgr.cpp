@@ -7,6 +7,7 @@
 
 #include "../head/mongoMgr.h"
 #include "helpFunctions.h"
+#include "stringDef.h"
 
 
 my::MongoMgr::MongoMgr()
@@ -78,16 +79,23 @@ int my::MongoMgr::db_count(const string& col_name, string query  /*= "" */)
 Json::Value my::MongoMgr::findJson(const string& col_name, string& query)
 {
 	string queryStr = my::HelpFunctions::tighten(query);
-	Json::Value ret;
+	Json::Value ret = Json::Value::null;
 	Json::Reader reader;
 	string colName = build_db_name(col_name);
 	try{
 		mongo::BSONObj obj = m_MongoConn.findOne(colName, queryStr);
-		reader.parse(obj.jsonString(), ret);
-		//printf("%s : %s  %s\n", __FUNCTION__, obj.jsonString().c_str(), queryStr.c_str());
+		if (obj.isEmpty())
+		{
+			return Json::Value::null;
+		}
+		if (!reader.parse(obj.jsonString(), ret))
+		{
+			return Json::Value::null;
+		}
 	}catch(mongo::DBException& e)
 	{
 		printf("%s| caught exception: %s\n", __FUNCTION__, e.what());
+		return Json::Value::null;
 	}	
 	return ret;
 }
@@ -100,13 +108,17 @@ Json::Value my::MongoMgr::findJson(const string& col_name, Json::Value& queryJso
 
 Json::Value my::MongoMgr::findJson(const string& col_name)
 {
-	Json::Value ret = Json::arrayValue;
+	Json::Value ret = Json::Value::null;
 	string colName = build_db_name(col_name);
 	std::auto_ptr< mongo::DBClientCursor > cursor = m_MongoConn.query(colName);
 	try{
 		while(cursor->more())
 		{
 			mongo::BSONObj obj = cursor->next();
+			if (obj.isEmpty())
+			{
+				continue;
+			}
 			Json::Reader reader;
 			string tmp = obj.jsonString();
 			Json::Value p;

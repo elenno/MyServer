@@ -44,14 +44,18 @@ int main()
 
 	try
 	{
-		my::GameServer server;
-		server.init();
-		server.run();
-		
+		do		
 		{
-		    mongoMgr.connectDB("127.0.0.1");
+			gameSvr.init();
+			gameSvr.run();
+		    bool res = mongoMgr.connectDB("127.0.0.1");
+			if (!res)
+			{
+				LogW << "can't connect to Mongo" << LogEnd;
+				return 0;
+			}
 			bookStoreMgr;
-		}
+		}while(0);
 		
 		while(true)
 		{

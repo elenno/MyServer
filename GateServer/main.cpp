@@ -10,7 +10,7 @@ int main()
 	//TcpServer server(io_service, en);
 	//server.run();
 
-	my::GateServer gateSvr;
+	gateSvr;
 	gateSvr.init();
 	gateSvr.run();
 	while(1)

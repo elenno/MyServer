@@ -6,6 +6,7 @@
  */
 #include "../head/book.h"
 #include <string>
+#include "stringDef.h"
 
 using namespace std;
 

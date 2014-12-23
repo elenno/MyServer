@@ -37,8 +37,8 @@ void my::TcpConnection::start()
 void my::TcpConnection::handle_write(const boost::system::error_code& err, size_t bytes_transferred)
 {
 	if (err)
-	{
-		printf("Write Error! Close Socket!\n");
+	{		
+		printf("Write Error! Close Socket! %s\n", err.message().c_str());
 		m_Socket.close();
 		return;
 	}
@@ -67,6 +67,7 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 {
 	if (err)
 	{		
+		std::cout << "net_id: " << m_NetId << "  endpoint port:" << m_Socket.remote_endpoint().port() << "  reason: " << err.message() << std::endl;
 		m_Socket.close();
 		return;
 	}

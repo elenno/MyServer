@@ -8,7 +8,7 @@
 #ifndef __BOOK_H__
 #define __BOOK_H__
 
-#include "../common/common.h"
+#include "common.h"
 #include<boost/shared_ptr.hpp>
 #include<nedmalloc/nedmalloc.h>
 #include<json/json.h>
