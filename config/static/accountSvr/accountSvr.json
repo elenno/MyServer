@@ -1,0 +1,5 @@
+{
+    "port":10084,
+	"gateSvrIp":"127.0.0.1",
+	"gateSvrPort":10085
+}
