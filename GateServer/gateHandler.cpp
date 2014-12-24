@@ -49,7 +49,8 @@ void my::GateHandler::handleServerMsg(ConnectionPtr conn, NetMessage& msg)
 				{
 					//登陆成功
 					int playerId = json["msg"][1u].asInt();
-					gateSvr.onPlayerLogin(playerId);
+					int netId = msg.getNetId();
+					gateSvr.onPlayerLogin(playerId, netId);
 				}
 			}
 		}
@@ -69,6 +70,9 @@ void my::GateHandler::handleServerMsg(ConnectionPtr conn, NetMessage& msg)
 void my::GateHandler::handleClientMsg(ConnectionPtr conn, NetMessage& req)
 {
 	int protoId = req.getProto();
+	req.setNetId(conn->getNetId());
+	//todo 检查client有效性
+
 	if (protoId > my::protocol::GATE_BEGIN && protoId < my::protocol::GATE_END)
 	{
 		//玩家发送给gate， 心跳？

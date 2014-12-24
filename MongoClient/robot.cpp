@@ -78,6 +78,7 @@ void my::Robot::handleLoginRsp(Json::Value& msg)
 		int playerId = msg["msg"][1u].asInt();
 		m_PlayerInfo[db::Player::playerId] = playerId;
 		m_nStep = protocol::ENTER_GAME_REQ;
+		//m_nStep = protocol::PLAYER_LOGIN_REQ;
 	}
 	else if (1 == msgId)
 	{

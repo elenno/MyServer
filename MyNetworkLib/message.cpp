@@ -1,10 +1,11 @@
 #include "message.h"
 
-my::NetMessage::NetMessage(std::string& json_str, int proto, int playerId)
+my::NetMessage::NetMessage(std::string& json_str, int proto, int playerId, int netId)
 { 
 	m_szMessage = json_str;
 	m_nProto = proto;
 	m_nPlayerId = playerId;
+	m_nNetId = netId;
 	m_nLen = 0;
 	memset(m_szStream, 0, sizeof(m_szStream));
 }
@@ -22,9 +23,14 @@ my::NetMessage::~NetMessage()
 
 }
 
-std::string my::NetMessage::getMessage()
+int my::NetMessage::getNetId()
 {
-    return m_szMessage;
+	return m_nNetId;
+}
+
+void my::NetMessage::setNetId(int netId)
+{
+	m_nNetId = netId;
 }
 
 int my::NetMessage::getLen()
@@ -62,6 +68,11 @@ void my::NetMessage::setMessage(const std::string& msg)
 	m_szMessage = msg;
 }
 
+std::string my::NetMessage::getMessage()
+{
+	return m_szMessage;
+}
+
 void my::NetMessage::serialize()
 {
 	m_nLen = 0;
@@ -70,6 +81,9 @@ void my::NetMessage::serialize()
 
 	memcpy(m_szStream + m_nLen, &m_nPlayerId, sizeof(m_nPlayerId));
 	m_nLen += sizeof(m_nPlayerId);
+
+	memcpy(m_szStream + m_nLen, &m_nNetId, sizeof(m_nNetId));
+	m_nLen += sizeof(m_nNetId);
 
 	memcpy(m_szStream + m_nLen, m_szMessage.c_str(), m_szMessage.length());
 	m_nLen += m_szMessage.length();
@@ -85,6 +99,10 @@ bool my::NetMessage::deserialize(const char* buff, int size)
 	memcpy(&m_nPlayerId, buff + m_nLen, sizeof(m_nPlayerId));
 	m_nLen += sizeof(m_nPlayerId);
 	size -= sizeof(m_nPlayerId);
+
+	memcpy(&m_nNetId, buff + m_nLen, sizeof(m_nNetId));
+	m_nLen += sizeof(m_nNetId);
+	size -= sizeof(m_nNetId);
 
 	m_szMessage.assign(buff + m_nLen, size);
 	return true;

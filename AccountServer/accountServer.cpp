@@ -2,6 +2,7 @@
 #include "fileSystem.h"
 #include "log_system.h"
 #include "stringDef.h"
+#include "valueDef.h"
 
 my::AccountServer::AccountServer()
 {
@@ -46,6 +47,7 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 	else
 	{
 		m_GateConn = conn;
+		m_GateConn->setNetId(server_id::GATE_SVR);
 		m_GateConn->start();
 		asyncAccept();
 	}

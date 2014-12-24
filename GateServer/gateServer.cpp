@@ -34,6 +34,7 @@ void my::GateServer::init()
 	int accountSvrPort = gateConf["accountSvrPort"].asInt();
 
 	m_nConnCount = 0;
+	m_nNetIdHolder = 0;
 	m_pService = ServicePtr(new boost::asio::io_service());
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(ip::tcp::v4(), port));
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(*m_pService, *m_pEndpoint));
@@ -98,10 +99,13 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 		std::cout << conn->getSocket().remote_endpoint().address() << " " << conn->getSocket().remote_endpoint().port() << std::endl;
 
 		boost::recursive_mutex::scoped_lock lock(mtx);
-	    m_ConnMap.insert(std::make_pair<int, ConnectionPtr>(m_nConnCount, conn));	
-		conn->setNetId(m_nConnCount);
+		
+		conn->setNetId(m_nNetIdHolder);
+		m_ConnMap.insert(std::make_pair<int, ConnectionPtr>(m_nNetIdHolder, conn));		
 		conn->start();
+		m_nNetIdHolder = (m_nNetIdHolder + 1) % MAX_NET_ID;
 		m_nConnCount++;
+			
 		GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
 		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
@@ -124,7 +128,7 @@ void my::GateServer::connect(std::string ipaddr, std::string port, ConnectionPtr
 
 void my::GateServer::sendToGameSvr(NetMessage& msg)
 {
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId());
+	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
 	if(!m_pGameConn->sendMessage(tmp))
 	{
@@ -134,7 +138,7 @@ void my::GateServer::sendToGameSvr(NetMessage& msg)
 
 void my::GateServer::sendToAccountSvr(NetMessage& msg)
 {
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId());
+	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
 	LogD << "send msg to gameSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
 	if(!m_pAccountConn->sendMessage(tmp))
@@ -146,17 +150,87 @@ void my::GateServer::sendToAccountSvr(NetMessage& msg)
 void my::GateServer::sendToPlayer(NetMessage& msg)
 {
 	int playerId = msg.getPlayerId();
+	int netId = msg.getNetId();
 	ConnectionMap::iterator it = m_PlayerMap.find(playerId);
+	bool flag = false;
 	if (it == m_PlayerMap.end())
 	{
 		LogW << __FUNCTION__ << "| Player not online, playerId=" << playerId << LogEnd;
+		it = m_ConnMap.find(netId);
+		flag = true;
+		if (it == m_ConnMap.end())
+		{
+			LogW << __FUNCTION__ << "| ConnectionMap not found netId:" << netId << LogEnd;
+		    return;
+		}
+	}
+	ConnectionPtr playerConn = it->second;
+	if (!playerConn->getSocket().is_open())
+	{
+		//socket already closed!!!
+		LogW << __FUNCTION__ << "| Socket closed! netId=" << netId << LogEnd;
+		//kick player
+		kickPlayer(playerId, netId, flag);
 		return;
 	}
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId());
+
+	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
-	ConnectionPtr playerConn = it->second;
 	if (!playerConn->sendMessage(tmp))
 	{
 		LogW << __FUNCTION__ << "| Send Msg To Player Failed, playerId=" << playerId << LogEnd;
+	}
+}
+
+void my::GateServer::onPlayerLogin(int playerId, int netId)
+{
+	if (netId < 0 || playerId < 0)
+	{
+		return;
+	}
+	ConnectionMap::iterator it = m_PlayerMap.find(playerId);
+	if (it != m_PlayerMap.end())
+	{
+		ConnectionPtr conn = it->second;
+		if (conn->getNetId() == netId)
+		{
+			//玩家已在线，无需再登陆
+			return;
+		}
+		kickPlayer(playerId, netId, false);
+	}
+    it = m_ConnMap.find(netId);
+	if (it == m_ConnMap.end())
+	{
+		//找不到conn,哪里有问题？
+		LogW << __FUNCTION__ << "  Can't find connection, netId=" << netId << LogEnd;
+	}
+	else
+	{
+		ConnectionPtr conn = it->second;
+		m_PlayerMap.insert(ConnectionMap::_Val_type(playerId, conn));
+		LogD << __FUNCTION__ << "  New User Login, playerId=" << playerId << " netId=" << netId << LogEnd;
+	}
+}
+
+void my::GateServer::kickPlayer(int playerId, int netId, bool flag /* = false */)
+{
+	ConnectionMap::iterator it = m_ConnMap.find(netId);
+	if (it != m_ConnMap.end())
+	{
+		//todo 通知客户端被踢了
+		ConnectionPtr conn = it->second;
+		m_ConnMap.erase(it);
+		conn->stop();
+		m_nConnCount--;
+	}
+	if (!flag)
+	{
+		//同时删除PlayerMap和ConnMap
+		ConnectionMap::iterator it = m_PlayerMap.find(playerId);
+		if (it != m_PlayerMap.end())
+		{
+			m_PlayerMap.erase(it);
+		}
 	}
 }

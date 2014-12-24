@@ -27,6 +27,7 @@ namespace my
 		void setNetId(int netId);
 		int getNetId();
 		bool sendMessage(NetMessage& msg);
+        void stop();
 
 	private:
 

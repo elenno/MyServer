@@ -12,6 +12,8 @@
 using namespace boost::asio;
 #define gateSvr boost::detail::thread::singleton<my::GateServer>::instance()
 
+#define MAX_NET_ID 2147483647
+
 namespace my
 {
 	class GateServer : public TcpServer
@@ -38,7 +40,8 @@ namespace my
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // 重写handle_accept
 		void handle_connect(ConnectionPtr conn, boost::system::error_code err);
 
-		void onPlayerLogin(int playerId);
+		void onPlayerLogin(int playerId, int netId);
+		void kickPlayer(int playerId, int netId, bool flag = false);
 
 	private:
 		void connect(std::string ipaddr, std::string port, ConnectionPtr conn);
@@ -49,6 +52,7 @@ namespace my
 		ConnectionMap m_ConnMap;
 		ConnectionMap m_PlayerMap;
 		int m_nConnCount;
+		int m_nNetIdHolder;
 		ConnectionPtr m_pGameConn; // 用于连接到game
 		ConnectionPtr m_pAccountConn; //连接AcountSvr
 

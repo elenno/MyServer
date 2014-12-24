@@ -25,6 +25,7 @@ bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)
 	Json::Value reqJson;
 	Json::Reader reader;
 	int playerId = reqMsg.getPlayerId();
+	int netId = reqMsg.getNetId();
 	if (!reader.parse(reqMsg.getMessage(), reqJson))
 	{
 	    return false;
@@ -50,6 +51,7 @@ bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)
 		rspMsg.setMessage(tmp);
 		rspMsg.setProto(responseId);
 		rspMsg.setPlayerId(playerId);
+		rspMsg.setNetId(netId);
 	    return true;
 	}
 }

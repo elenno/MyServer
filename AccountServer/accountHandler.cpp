@@ -23,7 +23,6 @@ void my::AccountHandler::onRecv(ConnectionPtr conn, NetMessage& req)
 		return;
 	}
 	NetMessage rsp;
-	int playerId = req.getPlayerId();
 	funcHandlerMgr.runFuncHandler(req, rsp);
 	rsp.serialize();
 	conn->sendMessage(rsp);

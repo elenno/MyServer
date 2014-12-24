@@ -51,6 +51,7 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 	try{
 	static ip::tcp::no_delay option(true);
 	m_Socket.set_option(option);
+	m_Robot.reset();
 	m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
     }catch(std::exception& e)
     {
@@ -70,6 +71,11 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 void my::TcpClient::post_write()
 {
 	//just for test
+	if (!m_Socket.is_open())
+	{
+		post_connect();
+		return;
+	}
 	
 	Json::Value reqJson;
 	int step = -1;
@@ -96,7 +102,7 @@ void my::TcpClient::post_write()
         
 	}
 	std::string tmp = my::HelpFunctions::tighten(reqJson.toStyledString());
-	NetMessage msg(tmp, step, playerId);
+	NetMessage msg(tmp, step, playerId, 0);
 	msg.serialize();
 	memcpy(m_WriteBuff, msg.getStream(), msg.getLen());
 	m_nWriteLen += msg.getLen();
@@ -129,7 +135,13 @@ void my::TcpClient::handle_read(const boost::system::error_code& err, size_t byt
 {
 	if (err)
 	{
-		m_Socket.close();
+		if (m_Socket.is_open())
+		{
+			m_Socket.close();
+			
+		}
+		post_connect();
+		return;
 	}
 	//std::cout << "Receive Message: length=" << bytes_transferred << std::endl;
 	NetMessage msg;

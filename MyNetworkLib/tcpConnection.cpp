@@ -39,7 +39,10 @@ void my::TcpConnection::handle_write(const boost::system::error_code& err, size_
 	if (err)
 	{		
 		printf("Write Error! Close Socket! %s\n", err.message().c_str());
-		m_Socket.close();
+		//if (m_Socket.is_open())
+		//{
+		//	m_Socket.close();
+		//}
 		return;
 	}
 	m_bWriteInProgress = false;
@@ -67,8 +70,11 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 {
 	if (err)
 	{		
-		std::cout << "net_id: " << m_NetId << "  endpoint port:" << m_Socket.remote_endpoint().port() << "  reason: " << err.message() << std::endl;
-		m_Socket.close();
+		std::cout << "net_id: " << m_NetId << "  reason: " << err.message() << std::endl;
+		//if (m_Socket.is_open())
+		//{
+		//	m_Socket.close();
+		//}		
 		return;
 	}
 	std::cout << "Receive Message: length=" << bytes_transferred <<std::endl; 
@@ -82,8 +88,6 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 	else
 	{
 		std::cout << "Receive Message: content=" << reqMsg.getMessage() << std::endl;
-		
-
 		m_pHandler->onRecv(shared_from_this(), reqMsg);
 	}
 	post_read();
@@ -129,4 +133,22 @@ void my::TcpConnection::setNetId(int netId)
 int my::TcpConnection::getNetId()
 {
 	return m_NetId;
+}
+
+void my::TcpConnection::stop()
+{
+	try
+	{
+		m_bWriteInProgress = false;
+		memset(m_WriteBuffer, 0, sizeof(m_WriteBuffer));
+		memset(m_ReadBuffer, 0, sizeof(m_ReadBuffer));
+		if (m_Socket.is_open())
+		{
+			m_Socket.close();
+		}
+	}
+	catch(std::exception& e)
+	{
+		std::cout << "Stop Connection Exception: " << e.what() << std::endl;
+	}
 }
