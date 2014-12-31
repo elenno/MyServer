@@ -46,7 +46,8 @@ void my::Robot::handleMsg(NetMessage& msg)
 {
     Json::Value msgJson;
 	Json::Reader reader;
-	if (!reader.parse(msg.getMessage(), msgJson))
+	std::string msgStr = msg.getMessage();
+	if (msgStr != "" && !reader.parse(msgStr, msgJson))
 	{
 		LogW << "Can't get the Json msg, username=" << m_AccountInfo[db::Account::userName].asString() << LogEnd;
 	    return;
@@ -59,6 +60,18 @@ void my::Robot::handleMsg(NetMessage& msg)
 	else if (protoId == protocol::PLAYER_REGIST_RSP)
 	{
 		handleRegistRsp(msgJson);
+	}
+	else if (protoId == protocol::PLAYER_CREATE_ROLE_RSP)
+	{
+		handleCreateRoleRsp(msgJson);
+	}
+	else if (protoId == protocol::PLAYER_ENTER_GAME_RSP)
+	{
+		handleEnterGameRsp(msgJson);
+	}
+	else if (protoId == protocol::PLAYER_HEART_BEAT_RSP)
+	{
+		handleHeartBeatRsp(msgJson);
 	}
 }
 
@@ -77,7 +90,7 @@ void my::Robot::handleLoginRsp(Json::Value& msg)
 	{
 		int playerId = msg["msg"][1u].asInt();
 		m_PlayerInfo[db::Player::playerId] = playerId;
-		m_nStep = protocol::ENTER_GAME_REQ;
+		m_nStep = protocol::PLAYER_ENTER_GAME_REQ;
 		//m_nStep = protocol::PLAYER_LOGIN_REQ;
 	}
 	else if (1 == msgId)
@@ -116,6 +129,62 @@ void my::Robot::handleRegistRsp(Json::Value& msg)
 	}
 }
 
+void my::Robot::handleEnterGameReq(Json::Value& msg)
+{
+	m_nStep = protocol::PLAYER_ENTER_GAME_RSP;
+}
+
+void my::Robot::handleEnterGameRsp(Json::Value& msg)
+{
+    int msgId = msg["msg"][0u].asInt();
+	if (0 == msgId)
+	{
+		Json::Value& info = msg["msg"][1u];
+		m_PlayerInfo[db::Player::nickName] = info[db::Player::nickName];
+		m_PlayerInfo[db::Player::level] = info[db::Player::level];
+		m_PlayerInfo[db::Player::vip] = info[db::Player::vip];
+		m_nStep = protocol::PLAYER_HEART_BEAT_REQ;
+	}
+	else if (1 == msgId)
+	{
+		m_nStep = protocol::PLAYER_CREATE_ROLE_REQ;
+	}
+	else
+	{
+		m_nStep = protocol::PLAYER_LOGIN_REQ;
+	}
+}
+
+void my::Robot::handleCreateRoleReq(Json::Value& msg)
+{
+	msg["msg"][0u] = m_AccountInfo[db::Account::userName]; //昵称直接等于用户名
+	m_nStep = protocol::PLAYER_CREATE_ROLE_REQ;
+}
+
+void my::Robot::handleCreateRoleRsp(Json::Value& msg)
+{
+	int msgId = msg["msg"][0u].asInt();
+	if (0 == msgId)
+	{
+		m_nStep = protocol::PLAYER_ENTER_GAME_REQ;
+	}
+	else
+	{
+		m_nStep = protocol::PLAYER_LOGIN_REQ;
+	}
+}
+
+void my::Robot::handleHeartBeatReq(Json::Value& msg)
+{
+	m_nStep = protocol::PLAYER_HEART_BEAT_REQ;
+}
+
+void my::Robot::handleHeartBeatRsp(Json::Value& msg)
+{
+	m_nStep = -1;
+
+}
+
 void my::Robot::doAction(Json::Value& msg, int& step, int& playerId)
 {
 	step = m_nStep;
@@ -127,6 +196,18 @@ void my::Robot::doAction(Json::Value& msg, int& step, int& playerId)
 	else if (m_nStep == protocol::PLAYER_REGIST_REQ)
 	{
 		handleRegistReq(msg);
+	}
+	else if (m_nStep == protocol::PLAYER_CREATE_ROLE_REQ)
+	{
+		handleCreateRoleReq(msg);
+	}
+	else if (m_nStep == protocol::PLAYER_ENTER_GAME_REQ)
+	{
+		handleEnterGameReq(msg);
+	}
+	else if (m_nStep == protocol::PLAYER_HEART_BEAT_REQ)
+	{
+		handleHeartBeatReq(msg);
 	}
 	else
 	{

@@ -24,9 +24,14 @@ namespace my
 	public:
 		void handleLoginReq(Json::Value& msg);
 		void handleLoginRsp(Json::Value& msg);
-	
 		void handleRegistReq(Json::Value& msg);
 		void handleRegistRsp(Json::Value& msg);
+		void handleEnterGameReq(Json::Value& msg);
+		void handleEnterGameRsp(Json::Value& msg);
+		void handleCreateRoleReq(Json::Value& msg);
+		void handleCreateRoleRsp(Json::Value& msg);
+		void handleHeartBeatReq(Json::Value& msg);
+		void handleHeartBeatRsp(Json::Value& msg);
 
 	public:
 		void init(std::string prefix, int id);

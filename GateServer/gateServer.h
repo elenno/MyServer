@@ -5,6 +5,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/thread/detail/singleton.hpp>
+#include <boost/thread/thread_time.hpp>
 #include <string>
 #include "tcpServer.h"
 #include "tcpConnection.h"
@@ -40,11 +41,15 @@ namespace my
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // 重写handle_accept
 		void handle_connect(ConnectionPtr conn, boost::system::error_code err);
 
-		void onPlayerLogin(int playerId, int netId);
-		void kickPlayer(int playerId, int netId, bool flag = false);
+		void onPlayerLogin(int playerId, int netId);	
+		void update();
+		boost::system_time getSystemTime();
 
 	private:
 		void connect(std::string ipaddr, std::string port, ConnectionPtr conn);
+		void checkHeartBeat(boost::system_time time);
+		void kickConnection(ConnectionPtr conn);
+		void kickPlayer(int playerId, int netId);
 
 	private:
 
@@ -55,7 +60,7 @@ namespace my
 		int m_nNetIdHolder;
 		ConnectionPtr m_pGameConn; // 用于连接到game
 		ConnectionPtr m_pAccountConn; //连接AcountSvr
-
+		boost::system_time m_SystemTime;
 	};
 }
 

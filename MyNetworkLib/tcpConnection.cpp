@@ -14,6 +14,8 @@ my::TcpConnection::TcpConnection(io_service& ios, BasePtr handler) : m_Socket(io
 	memset(m_ReadBuffer, 0, sizeof(m_ReadBuffer));
 	m_nWriteLen = 0;
 	m_bWriteInProgress = false;
+	m_HeartBeat = boost::get_system_time();
+	m_nPlayerId = 0;
 }
 
 my::TcpConnection::~TcpConnection()
@@ -151,4 +153,24 @@ void my::TcpConnection::stop()
 	{
 		std::cout << "Stop Connection Exception: " << e.what() << std::endl;
 	}
+}
+
+void my::TcpConnection::setHeartBeat(boost::system_time heartBeat)
+{
+	m_HeartBeat = heartBeat;
+}
+
+boost::system_time my::TcpConnection::getHeartBeat()
+{
+	return m_HeartBeat;
+}
+
+void my::TcpConnection::setPlayerId(int playerId)
+{
+	m_nPlayerId = playerId;
+}
+
+int my::TcpConnection::getPlayerId()
+{
+	return m_nPlayerId;
 }

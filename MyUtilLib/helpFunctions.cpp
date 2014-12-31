@@ -1,4 +1,6 @@
 #include "helpFunctions.h"
+#include <boost/thread/thread_time.hpp>
+#include <boost/thread.hpp>
 #include <fstream>
 
 std::string my::HelpFunctions::tighten(const std::string& str)
@@ -21,4 +23,18 @@ std::string my::HelpFunctions::tighten(const std::string& str)
 		}
 	}
 	return tmp;
+}
+
+void my::HelpFunctions::threadSleep(int offset)
+{
+	boost::system_time time = boost::get_system_time();
+	time += boost::posix_time::microsec(offset); 
+	boost::thread::sleep(time);
+}
+
+void my::HelpFunctions::threadSleepSecond(int offset)
+{
+	boost::system_time time = boost::get_system_time();
+	time += boost::posix_time::seconds(offset); 
+	boost::thread::sleep(time);
 }

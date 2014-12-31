@@ -45,6 +45,8 @@ void my::GateServer::init()
 
 	connectToGameSvr(gameSvrIp, gameSvrPort);
 	connectToAccountSvr(accountSvrIp, accountSvrPort);
+
+	update();
 }
 
 void my::GateServer::connectToGameSvr(std::string ipaddr, int port)
@@ -170,7 +172,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 		//socket already closed!!!
 		LogW << __FUNCTION__ << "| Socket closed! netId=" << netId << LogEnd;
 		//kick player
-		kickPlayer(playerId, netId, flag);
+		kickConnection(playerConn);
 		return;
 	}
 
@@ -197,7 +199,7 @@ void my::GateServer::onPlayerLogin(int playerId, int netId)
 			//玩家已在线，无需再登陆
 			return;
 		}
-		kickPlayer(playerId, netId, false);
+		kickConnection(conn);
 	}
     it = m_ConnMap.find(netId);
 	if (it == m_ConnMap.end())
@@ -208,29 +210,74 @@ void my::GateServer::onPlayerLogin(int playerId, int netId)
 	else
 	{
 		ConnectionPtr conn = it->second;
+		conn->setPlayerId(playerId);
+		conn->setHeartBeat(m_SystemTime); //登陆的时候心跳一次
 		m_PlayerMap.insert(ConnectionMap::_Val_type(playerId, conn));
 		LogD << __FUNCTION__ << "  New User Login, playerId=" << playerId << " netId=" << netId << LogEnd;
 	}
 }
 
-void my::GateServer::kickPlayer(int playerId, int netId, bool flag /* = false */)
+void my::GateServer::kickPlayer(int playerId, int netId)
 {
-	ConnectionMap::iterator it = m_ConnMap.find(netId);
-	if (it != m_ConnMap.end())
+	if (playerId > 0)
 	{
-		//todo 通知客户端被踢了
-		ConnectionPtr conn = it->second;
-		m_ConnMap.erase(it);
-		conn->stop();
-		m_nConnCount--;
-	}
-	if (!flag)
-	{
-		//同时删除PlayerMap和ConnMap
 		ConnectionMap::iterator it = m_PlayerMap.find(playerId);
-		if (it != m_PlayerMap.end())
+		if (it != m_PlayerMap.end() && netId == (it->second)->getNetId())
 		{
 			m_PlayerMap.erase(it);
 		}
 	}
+}
+
+void my::GateServer::kickConnection(ConnectionPtr conn)
+{
+	int netId = conn->getNetId();
+	if (netId < 0)
+	{
+		//server, don't do anything stupid
+	}
+	else
+	{
+		boost::recursive_mutex::scoped_lock lock(mtx);
+		m_ConnMap.erase(netId);
+		conn->stop();
+		m_nConnCount--;
+		int playerId = conn->getPlayerId();
+		kickPlayer(playerId, netId);
+	}
+}
+
+void my::GateServer::update()
+{
+	boost::system_time tmp = boost::get_system_time();
+	time_t c = (tmp - m_SystemTime).total_milliseconds();
+	if (c >= 5000)
+	{
+		time_t now = time(NULL);
+
+		//检查心跳
+		checkHeartBeat(tmp);
+	}
+	m_SystemTime = tmp;
+	HelpFunctions::threadSleep(1);
+	m_pService->post(boost::bind(&GateServer::update, this));
+}
+
+void my::GateServer::checkHeartBeat(boost::system_time tmp)
+{
+	ConnectionMap::iterator it = m_ConnMap.begin();
+	for (; it != m_ConnMap.end(); )
+	{
+		ConnectionPtr conn = it->second;
+		++it;
+		if ((tmp - conn->getHeartBeat()).total_seconds() > 60)//一分钟没心跳，死了吧
+		{
+			kickConnection(conn); //todo kick
+		}
+	}
+}
+
+boost::system_time my::GateServer::getSystemTime()
+{
+	return m_SystemTime;
 }

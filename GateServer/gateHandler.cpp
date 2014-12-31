@@ -33,7 +33,7 @@ void my::GateHandler::handleServerMsg(ConnectionPtr conn, NetMessage& msg)
 	int protoId = msg.getProto();
 	if (protoId > protocol::GATE_BEGIN && protoId < protocol::GATE_END)
 	{
-		//由gate处理
+		
 	}
 	else if (protoId > protocol::ACCOUNT_BEGIN && protoId < protocol::ACCOUNT_END)
 	{
@@ -75,8 +75,13 @@ void my::GateHandler::handleClientMsg(ConnectionPtr conn, NetMessage& req)
 
 	if (protoId > my::protocol::GATE_BEGIN && protoId < my::protocol::GATE_END)
 	{
-		//玩家发送给gate， 心跳？
-
+		if (protoId == protocol::PLAYER_HEART_BEAT_REQ)
+		{
+			conn->setHeartBeat(gateSvr.getSystemTime());
+			std::string ret;
+			NetMessage rsp(ret, protocol::PLAYER_HEART_BEAT_RSP, req.getPlayerId(), req.getNetId());
+			gateSvr.sendToPlayer(rsp);
+		}
 	}
 	else if (protoId > my::protocol::GAME_BEGIN && protoId < my::protocol::GAME_END)
 	{

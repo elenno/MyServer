@@ -9,6 +9,8 @@ namespace my
 		{
 			/*************************************** GateSvr **************************************/
 			GATE_BEGIN = 1001,
+			    PLAYER_HEART_BEAT_REQ,
+				PLAYER_HEART_BEAT_RSP,
 			GATE_END = 2000,
 
 			/*************************************** AccountSvr ***********************************/
@@ -20,13 +22,10 @@ namespace my
 			ACCOUNT_END = 3000,
 			/*************************************** GameSvr **************************************/
 			GAME_BEGIN = 10001,
-
-			CREATE_ROLE_REQ,
-			CREATE_ROLE_RSP,
-
-			ENTER_GAME_REQ,
-			ENTER_GAME_RSP,
-
+			    PLAYER_CREATE_ROLE_REQ,
+			    PLAYER_CREATE_ROLE_RSP,
+			    PLAYER_ENTER_GAME_REQ,
+			    PLAYER_ENTER_GAME_RSP,
 			GAME_END = 20000,  
 		};
 	}

@@ -26,7 +26,8 @@ bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)
 	Json::Reader reader;
 	int playerId = reqMsg.getPlayerId();
 	int netId = reqMsg.getNetId();
-	if (!reader.parse(reqMsg.getMessage(), reqJson))
+	std::string msgStr = reqMsg.getMessage();
+	if (msgStr != "" && !reader.parse(msgStr, reqJson))
 	{
 	    return false;
 	}

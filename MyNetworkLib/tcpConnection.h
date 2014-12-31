@@ -21,12 +21,16 @@ namespace my
 		TcpConnection(io_service& ios, BasePtr handler);
 		~TcpConnection();
 
-		void start();
-
 		ip::tcp::socket& getSocket();
 		void setNetId(int netId);
 		int getNetId();
+		void setHeartBeat(boost::system_time heartBeat);
+		boost::system_time getHeartBeat();
+		void setPlayerId(int playerId);
+		int getPlayerId();
+
 		bool sendMessage(NetMessage& msg);
+		void start();
         void stop();
 
 	private:
@@ -44,6 +48,8 @@ namespace my
 		boost::mutex m_WriteMutex;
 		int m_NetId; //记录玩家id或服务器id
 		BasePtr m_pHandler;
+		boost::system_time m_HeartBeat;
+		int m_nPlayerId;
 	};
 }
 

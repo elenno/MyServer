@@ -18,7 +18,7 @@ namespace my
 		bool createRoleReq(Json::Value& req, Json::Value& rsp, int playerId);
 		bool enterGameReq(Json::Value& req, Json::Value& rsp, int playerId);
 
-		void newPlayer(int playerId, std::string nickName);
+		bool newPlayer(int playerId, std::string nickName);
 		bool findPlayer(int playerId, Json::Value& json);
 		bool modifyUpdatePlayerInfo(int playerId, Json::Value& json);
 

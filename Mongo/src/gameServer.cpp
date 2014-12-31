@@ -3,6 +3,7 @@
 #include "fileSystem.h"
 #include "log_system.h"
 #include "stringDef.h"
+#include "../head/playerMgr.h"
 
 my::GameServer::GameServer()
 {
@@ -53,6 +54,12 @@ void my::GameServer::init()
 	m_pService = ServicePtr(new boost::asio::io_service());
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(ip::tcp::v4(), port));
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(*m_pService, *m_pEndpoint));
+
+	do 
+	{
+		//所有系统的初始化
+		playerMgr;
+	} while (0);
 
 	asyncAccept();
 }

@@ -81,26 +81,26 @@ void my::TcpClient::post_write()
 	int step = -1;
 	int playerId = -1;
 	m_Robot.doAction(reqJson, step, playerId);
-	if (step == -1)
+	/*if (step == -1)
 	{
 		if (count < 5)
 		{
 			//todo: 尚未返回，再等
 			count++;
-			//boost::this_thread::sleep(boost::posix_time::seconds(3));
-			//post_write();
 		    return;
 		}
 		else
 		{
 			//等太久了，重置robot
 			m_Robot.reset();
-			//boost::this_thread::sleep(boost::posix_time::seconds(3));
-			//post_write();
 			return;
-		}
-        
-	}
+		}     
+	}*/
+//	if (step == -1)
+//	{
+//		HelpFunctions::threadSleepSecond(70);//沉睡一段时间
+//	}
+
 	std::string tmp = my::HelpFunctions::tighten(reqJson.toStyledString());
 	NetMessage msg(tmp, step, playerId, 0);
 	msg.serialize();
@@ -110,8 +110,6 @@ void my::TcpClient::post_write()
 	m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
-	//boost::this_thread::sleep(boost::posix_time::seconds(3));
-	//post_write();
 }
 
 void my::TcpClient::post_read()

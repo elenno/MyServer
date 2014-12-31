@@ -23,21 +23,21 @@ my::PlayerMgr::~PlayerMgr()
 
 void my::PlayerMgr::regFunc()
 {
-	RegistFunc(my::protocol::CREATE_ROLE_REQ, my::protocol::CREATE_ROLE_RSP, PlayerMgr::createRoleReq);
-	RegistFunc(my::protocol::ENTER_GAME_REQ, my::protocol::ENTER_GAME_RSP, PlayerMgr::createRoleReq);
+	RegistFunc(my::protocol::PLAYER_CREATE_ROLE_REQ, my::protocol::PLAYER_CREATE_ROLE_RSP, PlayerMgr::createRoleReq);
+	RegistFunc(my::protocol::PLAYER_ENTER_GAME_REQ, my::protocol::PLAYER_ENTER_GAME_RSP, PlayerMgr::enterGameReq);
 }
 
-void my::PlayerMgr::newPlayer(int playerId, std::string nickname)
+bool my::PlayerMgr::newPlayer(int playerId, std::string nickname)
 {
 	if (m_PlayerInfoMap.find(playerId) != m_PlayerInfoMap.end())
 	{
 		//error
-		return;
+		return false;
 	}
 	if (m_NickNameMap.find(nickname) != m_NickNameMap.end())
 	{
 		//error
-		return;
+		return false;
 	}
 	Json::Value player;
 	player[db::Player::playerId] = playerId;
@@ -46,6 +46,7 @@ void my::PlayerMgr::newPlayer(int playerId, std::string nickname)
 	player[db::Player::vip] = 0;
 	m_PlayerInfoMap.insert(std::make_pair<int, Json::Value>(playerId, player));
     savePlayer(playerId, player);
+	return true;
 }
 
 bool my::PlayerMgr::findPlayer(int playerId, Json::Value& json)
@@ -113,17 +114,23 @@ bool my::PlayerMgr::createRoleReq(Json::Value& req, Json::Value& rsp, int player
 	}
 
 	std::string nickname = req["msg"][0u].asString();
-	
-	int playerCount = m_PlayerInfoMap.size();
-	int newPlayerId = playerCount + 1;
-	newPlayer(newPlayerId, nickname);
+	newPlayer(playerId, nickname);
 	
 	rsp["msg"][0u] = 0;
-	rsp["msg"][1u] = newPlayerId;
 	return true;
 }
 
 bool my::PlayerMgr::enterGameReq(Json::Value& req, Json::Value& rsp, int playerId)
 {
+	Json::Value playerInfo;
+	if (!findPlayer(playerId, playerInfo))
+	{
+		rsp["msg"][0u] = 1; //找不到该用户
+		return true;
+	}
+	rsp["msg"][0u] = 0;
+	rsp["msg"][1u][db::Player::nickName] = playerInfo[db::Player::nickName];
+	rsp["msg"][1u][db::Player::vip] = playerInfo[db::Player::vip];
+	rsp["msg"][1u][db::Player::level] = playerInfo[db::Player::level];
 	return true;
 }
