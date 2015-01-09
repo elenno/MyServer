@@ -27,6 +27,7 @@ namespace my
 		void post_write();
 		void post_read();
 		void stop();
+		void do_some_thing();
 
 	private:
 		io_service& m_Service;

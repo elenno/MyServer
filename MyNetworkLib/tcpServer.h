@@ -20,7 +20,6 @@ namespace my
 	public:
 		typedef boost::shared_ptr<BaseHandler> BasePtr;
 		typedef boost::shared_ptr<TcpConnection> ConnectionPtr;
-		typedef boost::shared_ptr<boost::asio::io_service> ServicePtr;
 		typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> AcceptorPtr;
 		typedef boost::shared_ptr<boost::asio::ip::tcp::endpoint> EndpointPtr;
 
@@ -32,10 +31,8 @@ namespace my
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err);
 
 	protected:
-		std::vector<boost::shared_ptr<boost::thread>> m_ServiceThreads;
 		boost::recursive_mutex mtx;
 		EndpointPtr m_pEndpoint;
-		ServicePtr m_pService;
 		AcceptorPtr m_pAcceptor;
 	};
 }

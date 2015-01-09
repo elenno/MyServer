@@ -9,6 +9,7 @@
 #include <string>
 #include "tcpServer.h"
 #include "tcpConnection.h"
+#include "gateHandler.h"
 
 using namespace boost::asio;
 #define gateSvr boost::detail::thread::singleton<my::GateServer>::instance()
@@ -48,11 +49,12 @@ namespace my
 	private:
 		void connect(std::string ipaddr, std::string port, ConnectionPtr conn);
 		void checkHeartBeat(boost::system_time time);
-		void kickConnection(ConnectionPtr conn);
+		void checkServerAlive(boost::system_time time);
+		bool kickConnection(ConnectionPtr conn);
 		void kickPlayer(int playerId, int netId);
 
 	private:
-
+		Json::Value m_GateConf;
 		AcceptorPtr m_pAcceptor;
 		ConnectionMap m_ConnMap;
 		ConnectionMap m_PlayerMap;
@@ -61,6 +63,7 @@ namespace my
 		ConnectionPtr m_pGameConn; // 用于连接到game
 		ConnectionPtr m_pAccountConn; //连接AcountSvr
 		boost::system_time m_SystemTime;
+		GateHandler::ptr m_GateHandler;
 	};
 }
 

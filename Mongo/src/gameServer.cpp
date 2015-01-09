@@ -4,6 +4,9 @@
 #include "log_system.h"
 #include "stringDef.h"
 #include "../head/playerMgr.h"
+#include "helpFunctions.h"
+#include "funcHandler.h"
+#include "core.h"
 
 my::GameServer::GameServer()
 {
@@ -51,9 +54,8 @@ void my::GameServer::init()
 	std::string gameSvrIp = gameConf["gameSvrIp"].asString();
 	int gameSvrPort = gameConf["gameSvrPort"].asInt();
 
-	m_pService = ServicePtr(new boost::asio::io_service());
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(ip::tcp::v4(), port));
-	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(*m_pService, *m_pEndpoint));
+	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 
 	do 
 	{
@@ -62,11 +64,53 @@ void my::GameServer::init()
 	} while (0);
 
 	asyncAccept();
+
+	std::cout << "Init OK!!!" << std::endl;
+
+	update();
 }
 
 void my::GameServer::asyncAccept()
 {
 	GameHandler::ptr gameHandler = boost::shared_ptr<GameHandler>(new GameHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gameHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), gameHandler));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GameServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
+}
+
+void my::GameServer::update()
+{
+	boost::system_time tmp = boost::get_system_time();
+	time_t c = (tmp - m_SystemTime).total_milliseconds();
+	if (c >= 5000)
+	{
+		time_t now = time(NULL);
+		//每一段时间更新一次
+
+	}
+	m_SystemTime = tmp;
+	runMessage();
+	HelpFunctions::threadSleep(1);
+	core.getService().post(boost::bind(&GameServer::update, this));
+}
+
+void my::GameServer::pushMessage(NetMessage& msg)
+{
+	boost::recursive_mutex::scoped_lock lock(mtx);
+	m_MsgQueue.push(msg);
+}
+
+void my::GameServer::runMessage()
+{
+	boost::recursive_mutex::scoped_lock lock(mtx);
+    if (!m_MsgQueue.empty())
+	{
+		NetMessage& req = m_MsgQueue.front();
+		NetMessage rsp;
+		funcHandlerMgr.runFuncHandler(req, rsp);
+		rsp.serialize();
+		//可根据msg的protoId，找到对应的返回的conn，暂用gateConn
+		m_GateConn->sendMessage(rsp);
+
+		m_MsgQueue.pop();
+	}
 }

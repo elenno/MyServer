@@ -3,6 +3,7 @@
 #include "funcHandler.h"
 #include "log_system.h"
 #include "protocol.h"
+#include "../head/gameServer.h"
 
 my::GameHandler::GameHandler()
 {
@@ -23,10 +24,11 @@ void my::GameHandler::onRecv(ConnectionPtr conn, NetMessage& req)
 
 	if (protoId > my::protocol::GAME_BEGIN && protoId < my::protocol::GAME_END)
 	{
-		NetMessage rsp;
-		funcHandlerMgr.runFuncHandler(req, rsp);
-		rsp.serialize();
-		conn->sendMessage(rsp);
+		gameSvr.pushMessage(req);
+		//NetMessage rsp;
+		//funcHandlerMgr.runFuncHandler(req, rsp);
+		//rsp.serialize();
+		//conn->sendMessage(rsp);
 	}
 	else
 	{

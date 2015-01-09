@@ -13,11 +13,13 @@
 std::endl;     \
 logSys.endline()
 
-#define LogD logSys.logDebug(__FUNCDNAME__, __FUNCTION__)
-#define LogW logSys.logWarn(__FUNCDNAME__, __FUNCTION__)
+#define LogD logSys.logDebug(__FILE__, __FUNCTION__)
+#define LogW logSys.logWarn(__FILE__, __FUNCTION__)
+#define LogI logSys.logInfo(__FILE__, __FUNCTION__)
 
 static const std::string log_debug = "log/debug/";
 static const std::string log_warn = "log/warn/";   //要改为读入配置文件
+static const std::string log_info = "log/info/";
 
 namespace my
 {
@@ -29,6 +31,8 @@ namespace my
 
 		std::stringstream& logDebug(const char* fileName, const char* funcName);
 		std::stringstream& logWarn(const char* fileName, const char* funcName);
+		std::stringstream& logInfo(const char* fileName, const char* funcName);
+
 		void preLog(const char* fileName, const char* funcName);
 		void endline();
 		void outputLogToFile(std::string dir, std::string content);

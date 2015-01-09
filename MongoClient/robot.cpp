@@ -181,7 +181,7 @@ void my::Robot::handleHeartBeatReq(Json::Value& msg)
 
 void my::Robot::handleHeartBeatRsp(Json::Value& msg)
 {
-	m_nStep = -1;
+	m_nStep = protocol::PLAYER_LOGIN_REQ;
 
 }
 

@@ -7,6 +7,7 @@
 #include "valueDef.h"
 #include <boost/lexical_cast.hpp>
 #include <json/json.h>
+#include "core.h"
 
 my::GateServer::GateServer()
 {
@@ -26,7 +27,7 @@ void my::GateServer::init()
 		LogW << "Error init GateServer, null gateConf" << LogEnd;
 		return;
 	}
-	
+	m_GateConf = gateConf;
 	int	port = gateConf["port"].asInt();
 	std::string gameSvrIp = gateConf["gameSvrIp"].asString();
 	int gameSvrPort = gateConf["gameSvrPort"].asInt();
@@ -35,16 +36,17 @@ void my::GateServer::init()
 
 	m_nConnCount = 0;
 	m_nNetIdHolder = 0;
-	m_pService = ServicePtr(new boost::asio::io_service());
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(ip::tcp::v4(), port));
-	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(*m_pService, *m_pEndpoint));
+	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 
-	GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
+	m_GateHandler = boost::shared_ptr<GateHandler>(new GateHandler());
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 
 	connectToGameSvr(gameSvrIp, gameSvrPort);
 	connectToAccountSvr(accountSvrIp, accountSvrPort);
+
+	std::cout << "Init ok!!!" << std::endl;
 
 	update();
 }
@@ -52,8 +54,7 @@ void my::GateServer::init()
 void my::GateServer::connectToGameSvr(std::string ipaddr, int port)
 {
 	std::string portStr = boost::lexical_cast<std::string, int>(port);
-	GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
-	m_pGameConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
+	m_pGameConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 	m_pGameConn->setNetId(my::server_id::GAME_SVR);
 	connect(ipaddr, portStr, m_pGameConn);
 }
@@ -61,8 +62,7 @@ void my::GateServer::connectToGameSvr(std::string ipaddr, int port)
 void my::GateServer::connectToAccountSvr(std::string ipaddr, int port)
 {
 	std::string portStr = boost::lexical_cast<std::string, int>(port);
-	GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
-	m_pAccountConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
+	m_pAccountConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 	m_pAccountConn->setNetId(my::server_id::ACCOUNT_SVR);
 	connect(ipaddr, portStr, m_pAccountConn);
 }
@@ -71,14 +71,14 @@ void my::GateServer::handle_connect(ConnectionPtr conn, boost::system::error_cod
 {
 	if (err)
 	{
-		std::cout << __FUNCTION__ << err.message() << std::endl;
+		std::cout << "server name: " << conn->getNetId() << "  connect error: " << err.message() << std::endl;
 		conn->getSocket().close();
 		return;
 	}
 	else
 	{
 		//输出一下这个是成功连接了哪个服务器
-		std::cout << "server name: " << conn->getNetId() << std::endl;
+		std::cout << "server name: " << conn->getNetId() << "  connect success!" std::endl;
 
 		//start
 		conn->start();
@@ -91,8 +91,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 	{
 		std::cout << err.message() << std::endl;
 		conn->getSocket().close();
-		GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
-		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
+		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 	}
 	else
@@ -108,8 +107,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 		m_nNetIdHolder = (m_nNetIdHolder + 1) % MAX_NET_ID;
 		m_nConnCount++;
 			
-		GateHandler::ptr gatehandler = boost::shared_ptr<GateHandler>(new GateHandler());
-		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, gatehandler));
+		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 	}
 }
@@ -117,7 +115,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 void my::GateServer::connect(std::string ipaddr, std::string port, ConnectionPtr conn)
 {
 	boost::system::error_code err;
-	ip::tcp::resolver rslv(*m_pService);
+	ip::tcp::resolver rslv(core.getService());
 	ip::tcp::resolver::query q(ipaddr, port);
 	ip::tcp::resolver::iterator iter = rslv.resolve(q, err);
 	if (err)
@@ -157,12 +155,12 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	bool flag = false;
 	if (it == m_PlayerMap.end())
 	{
-		LogW << __FUNCTION__ << "| Player not online, playerId=" << playerId << LogEnd;
+		LogW << "| Player not online, playerId=" << playerId << LogEnd;
 		it = m_ConnMap.find(netId);
 		flag = true;
 		if (it == m_ConnMap.end())
 		{
-			LogW << __FUNCTION__ << "| ConnectionMap not found netId:" << netId << LogEnd;
+			LogW << "| ConnectionMap not found netId:" << netId << LogEnd;
 		    return;
 		}
 	}
@@ -170,7 +168,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	if (!playerConn->getSocket().is_open())
 	{
 		//socket already closed!!!
-		LogW << __FUNCTION__ << "| Socket closed! netId=" << netId << LogEnd;
+		LogW << "| Socket closed! netId=" << netId << LogEnd;
 		//kick player
 		kickConnection(playerConn);
 		return;
@@ -180,7 +178,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	tmp.serialize();
 	if (!playerConn->sendMessage(tmp))
 	{
-		LogW << __FUNCTION__ << "| Send Msg To Player Failed, playerId=" << playerId << LogEnd;
+		LogW << "| Send Msg To Player Failed, playerId=" << playerId << LogEnd;
 	}
 }
 
@@ -205,7 +203,7 @@ void my::GateServer::onPlayerLogin(int playerId, int netId)
 	if (it == m_ConnMap.end())
 	{
 		//找不到conn,哪里有问题？
-		LogW << __FUNCTION__ << "  Can't find connection, netId=" << netId << LogEnd;
+		LogW << "  Can't find connection, netId=" << netId << LogEnd;
 	}
 	else
 	{
@@ -213,7 +211,7 @@ void my::GateServer::onPlayerLogin(int playerId, int netId)
 		conn->setPlayerId(playerId);
 		conn->setHeartBeat(m_SystemTime); //登陆的时候心跳一次
 		m_PlayerMap.insert(ConnectionMap::_Val_type(playerId, conn));
-		LogD << __FUNCTION__ << "  New User Login, playerId=" << playerId << " netId=" << netId << LogEnd;
+		LogD << "  New User Login, playerId=" << playerId << " netId=" << netId << LogEnd;
 	}
 }
 
@@ -229,7 +227,7 @@ void my::GateServer::kickPlayer(int playerId, int netId)
 	}
 }
 
-void my::GateServer::kickConnection(ConnectionPtr conn)
+bool my::GateServer::kickConnection(ConnectionPtr conn)
 {
 	int netId = conn->getNetId();
 	if (netId < 0)
@@ -239,12 +237,20 @@ void my::GateServer::kickConnection(ConnectionPtr conn)
 	else
 	{
 		boost::recursive_mutex::scoped_lock lock(mtx);
-		m_ConnMap.erase(netId);
-		conn->stop();
-		m_nConnCount--;
-		int playerId = conn->getPlayerId();
-		kickPlayer(playerId, netId);
+		ConnectionMap::iterator it = m_ConnMap.find(netId);
+		if (it != m_ConnMap.end())
+		{
+			ConnectionPtr tmpConn = it->second;
+			m_ConnMap.erase(it);//应检查conn和tmpConn是否相同
+			m_nConnCount--;
+			int playerId = conn->getPlayerId();
+			kickPlayer(playerId, netId);
+			tmpConn->stop();
+			LogD << "erase from connMap" << LogEnd;
+			return true;
+		}
 	}
+	return false;
 }
 
 void my::GateServer::update()
@@ -253,14 +259,17 @@ void my::GateServer::update()
 	time_t c = (tmp - m_SystemTime).total_milliseconds();
 	if (c >= 5000)
 	{
+		m_SystemTime = tmp;
 		time_t now = time(NULL);
+		
+		//检查服务器是否依旧联通
+		checkServerAlive(tmp);
 
 		//检查心跳
 		checkHeartBeat(tmp);
 	}
-	m_SystemTime = tmp;
 	HelpFunctions::threadSleep(1);
-	m_pService->post(boost::bind(&GateServer::update, this));
+	core.getService().post(boost::bind(&GateServer::update, this));
 }
 
 void my::GateServer::checkHeartBeat(boost::system_time tmp)
@@ -270,10 +279,29 @@ void my::GateServer::checkHeartBeat(boost::system_time tmp)
 	{
 		ConnectionPtr conn = it->second;
 		++it;
-		if ((tmp - conn->getHeartBeat()).total_seconds() > 60)//一分钟没心跳，死了吧
+		if ((tmp - conn->getHeartBeat()).total_seconds() > 180)//一分钟没心跳，死了吧
 		{
+			LogW << "Connection is dead, kick it! netId=" << conn->getNetId() << "  playerId=" << conn->getPlayerId() << LogEnd;
 			kickConnection(conn); //todo kick
 		}
+	}
+}
+
+void my::GateServer::checkServerAlive(boost::system_time time)
+{
+	if (!m_pAccountConn->getSocket().is_open())
+	{
+		std::cout << "lost connection with accountSvr, reconnecting..." << std::endl;
+		std::string accountSvrIp = m_GateConf["accountSvrIp"].asString();
+		int accountSvrPort = m_GateConf["accountSvrPort"].asInt();
+		connectToAccountSvr(accountSvrIp, accountSvrPort);
+	}
+	if (!m_pGameConn->getSocket().is_open())
+	{
+		std::cout << "lost connection with gameSvr, reconnecting..." << std::endl;
+		std::string gameSvrIp = m_GateConf["gameSvrIp"].asString();
+		int gameSvrPort = m_GateConf["gameSvrPort"].asInt();
+		connectToGameSvr(gameSvrIp, gameSvrPort);
 	}
 }
 

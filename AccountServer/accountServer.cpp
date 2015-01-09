@@ -3,6 +3,7 @@
 #include "log_system.h"
 #include "stringDef.h"
 #include "valueDef.h"
+#include "core.h"
 
 my::AccountServer::AccountServer()
 {
@@ -23,10 +24,11 @@ void my::AccountServer::init()
 		return;
 	}
 	int	port = m_AccountConf["port"].asInt();
-	m_pService = ServicePtr(new boost::asio::io_service());
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
-	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(*m_pService, *m_pEndpoint));
+	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 	asyncAccept();
+
+	std::cout << "Init OK!!!" << std::endl;
 }
 
 void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_code err)
@@ -56,6 +58,6 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 void my::AccountServer::asyncAccept()
 {
 	AccountHandler::ptr accountHandler = boost::shared_ptr<AccountHandler>(new AccountHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(*m_pService, accountHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), accountHandler));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&AccountServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 }

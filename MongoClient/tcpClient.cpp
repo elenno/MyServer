@@ -8,6 +8,7 @@
 #include "json/json.h"
 #include "message.h"
 #include "helpFunctions.h"
+#include "stringDef.h"
 
 my::TcpClient::TcpClient(boost::asio::io_service& ios, ip::tcp::endpoint& en, std::string prefix, int id) : m_Service(ios), m_Socket(ios), m_EndPoint(en), m_Robot(prefix, id)
 {
@@ -46,26 +47,26 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 {
 	if (err)
 	{
+		std::cout << err.message() << std::endl;
 		m_Socket.close();
+		std::cout << "socket closed! reconnect!" << std::endl;
+		post_connect();
+		return;
 	}
+	//LogI << "connect ok!! name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << LogEnd;
+	std::cout << "connect ok!" << " name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << std::endl;
 	try{
 	static ip::tcp::no_delay option(true);
 	m_Socket.set_option(option);
 	m_Robot.reset();
-	m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
+	//post_read();
+	do_some_thing();
+	//post_write();
+	//m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
     }catch(std::exception& e)
     {
 	    std::cout << e.what() << std::endl;
     }
-	//以下代码是ios.run()下用的代码
-	//std::stringstream s;
-	//s << "Hello World: " << TcpClient::count;
-	//memset(m_WriteBuff, 0, sizeof(m_WriteBuff));
-	//strcpy(m_WriteBuff, s.str().c_str());
-	//TcpClient::count ++;
-	//m_Socket.async_write_some(buffer(m_WriteBuff), boost::bind(&TcpClient::handle_write, shared_from_this(),
-	//	boost::asio::placeholders::error,
-	//	boost::asio::placeholders::bytes_transferred));
 }
 
 void my::TcpClient::post_write()
@@ -73,6 +74,8 @@ void my::TcpClient::post_write()
 	//just for test
 	if (!m_Socket.is_open())
 	{
+		//LogW << "Socket closed! reconnect!" << LogEnd;
+		std::cout << "socket closed! reconnect!" << std::endl;
 		post_connect();
 		return;
 	}
@@ -81,7 +84,7 @@ void my::TcpClient::post_write()
 	int step = -1;
 	int playerId = -1;
 	m_Robot.doAction(reqJson, step, playerId);
-	/*if (step == -1)
+	if (step == -1)
 	{
 		if (count < 5)
 		{
@@ -92,87 +95,117 @@ void my::TcpClient::post_write()
 		else
 		{
 			//等太久了，重置robot
+			count = 0;
 			m_Robot.reset();
 			return;
 		}     
-	}*/
-//	if (step == -1)
-//	{
-//		HelpFunctions::threadSleepSecond(70);//沉睡一段时间
-//	}
-
+	}
+	//if (step == 1002)
+	//{
+	//	LogD << "Sleeping..." << LogEnd;
+	//	HelpFunctions::threadSleepSecond(5);//沉睡一段时间
+	//}
+	//HelpFunctions::threadSleepSecond(1);
+	//std::string tmp = "GET /www/br_temp/t546 HTTP/1.1\r\n";
+	//tmp += "Host: 127.0.0.1\r\n";
+	//tmp += "Connection: keep-alive\r\n";
+	//tmp += "Cache-Control: max-age=0\r\n";
+	//tmp += "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n";
+	//tmp += "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.154 Safari/537.36\r\n";
+	//tmp += "Accept-Encoding: gzip,deflate,sdch\r\n";
+	//tmp += "Accept-Language: zh-CN,zh;q=0.8\r\n";
+	//tmp += "Cookie: rock_format=json\r\n";
+	//tmp += "\r\n";
 	std::string tmp = my::HelpFunctions::tighten(reqJson.toStyledString());
 	NetMessage msg(tmp, step, playerId, 0);
 	msg.serialize();
+	LogD << "send msg: protoId=" << msg.getProto() << " content=" << msg.getMessage() << " msgLen=" << msg.getLen() << LogEnd;
+	m_nWriteLen = 0;
 	memcpy(m_WriteBuff, msg.getStream(), msg.getLen());
 	m_nWriteLen += msg.getLen();
+//	memcpy(m_WriteBuff, tmp.c_str(), tmp.length());
+//	m_nWriteLen += tmp.length();
 	
 	m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
 		boost::asio::placeholders::error,
 		boost::asio::placeholders::bytes_transferred));
+	
 }
 
 void my::TcpClient::post_read()
 {
+	if (!m_Socket.is_open())
+	{
+		//LogW<< "Socket closed! reconnect!" << LogEnd;
+        std::cout << "socket closed! reconnect!" << std::endl;
+		post_connect();
+		return;
+	}
+	memset(m_ReadBuff, 0, sizeof(m_ReadBuff));
 	m_Socket.async_read_some(buffer(m_ReadBuff), boost::bind(&TcpClient::handle_read, shared_from_this(), 
 			boost::asio::placeholders::error,	boost::asio::placeholders::bytes_transferred));
 }
 void my::TcpClient::handle_write(const boost::system::error_code& err, size_t bytes_transferred)
 {
-	//std::cout << "Send: " << m_WriteBuff << std::endl;
-	memset(m_ReadBuff, 0, sizeof(m_ReadBuff));
-	LogD << "Send msg: len=" << m_nWriteLen << LogEnd;
+	//LogD << "Send msg: len=" << m_nWriteLen << LogEnd;
+	std::cout << "Send msg: len=" << m_nWriteLen << " name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << std::endl;
+	memset(m_WriteBuff, 0, sizeof(m_WriteBuff));
 	m_nWriteLen = 0;
-	m_Service.post(boost::bind(&TcpClient::post_read, shared_from_this()));
-	//以下代码是ios.run()下用的代码
-	//m_Socket.async_read_some(buffer(m_ReadBuff), boost::bind(&TcpClient::handle_read, shared_from_this(), 
-	//	boost::asio::placeholders::error,	boost::asio::placeholders::bytes_transferred));
+	if (err)
+	{
+		if (m_Socket.is_open())
+		{
+	        m_Socket.close();
+		}
+		//LogW << "some error occur:" << err.message() << " Socket closed! reconnect!" << LogEnd;
+		std::cout << "socket closed! reconnect!" << std::endl;
+		post_connect();
+	}
+	
+
 }
 
 void my::TcpClient::handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
 	if (err)
 	{
+		//LogW << "some error occur:" << err.message() << " Socket closed! reconnect!" << LogEnd;
 		if (m_Socket.is_open())
 		{
 			m_Socket.close();
-			
 		}
+		std::cout << "socket closed! reconnect!" << std::endl;
 		post_connect();
 		return;
 	}
-	//std::cout << "Receive Message: length=" << bytes_transferred << std::endl;
-	NetMessage msg;
-	if (!msg.deserialize(m_ReadBuff, bytes_transferred))
-	{
-		printf("Deserialize Message Failed\n");
-	}
-	m_Robot.handleMsg(msg);
-	post_write();
+
+	//std::string tmp(m_ReadBuff, bytes_transferred);
+	//std::cout << tmp << std::endl;
+	std::cout << "Receive Message: name= " << m_Robot.getPlayerInfo()[db::Player::nickName].asString() << " length=" << bytes_transferred << std::endl;
+	//NetMessage msg;
+	//if (!msg.deserialize(m_ReadBuff, bytes_transferred))
+	//{
+	//	printf("Deserialize Message Failed\n");
+	//}
+	//std::cout << "Receive Message: Name=" << m_Robot.getPlayerInfo()[db::Player::nickName] << " Msg=" << msg.getMessage() << " Protocol=" << msg.getProto() << std::endl;
+	//m_Robot.handleMsg(msg);
+	//memset(m_ReadBuff, 0, sizeof(m_ReadBuff));
+
+	do_some_thing();
+	//post_read();
+	//post_write();
 	//std::cout << "Receive Message: content=" << msg.getMessage() << std::endl;
 
-	//Json::Value reqJson;
-	//reqJson["msg"] = 10001;
-	//string tmp = helpFunc.tighten(reqJson.toStyledString());
-	//NetMessage msg1(reqJson.toStyledString(), api::SHOW_BOOK_LIST_REQ);
-	//msg1.serialize();
-	//memcpy(m_WriteBuff, msg1.getStream(), msg1.getLen());
-	//m_nWriteLen += msg1.getLen();
-
-	//m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
-
-	//以下代码是ios.run()下用的代码
-	//std::stringstream s;
-	//s << "Hello World: " << TcpClient::count;
-	//memset(m_WriteBuff, 0, sizeof(m_WriteBuff));
-	//strcpy(m_WriteBuff, s.str().c_str());
-	//TcpClient::count ++;
-	//m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
-	//	boost::asio::placeholders::error,
-	//	boost::asio::placeholders::bytes_transferred));
 }
 
 void my::TcpClient::stop()
 {
 	m_Service.stop();
+}
+
+void my::TcpClient::do_some_thing()
+{
+	HelpFunctions::threadSleepSecond(2);
+	post_write();
+	post_read();
 }

@@ -38,6 +38,14 @@ std::stringstream& my::LogSystem::logWarn(const char* fileName, const char* func
 	return m_SStream;
 }
 
+std::stringstream& my::LogSystem::logInfo(const char* fileName, const char* funcName)
+{
+	setColor(LogSystem::DARKRED);
+	preLog(fileName, funcName);
+	m_szLogPath = log_info;
+	return m_SStream;
+}
+
 void my::LogSystem::outputLogToFile(std::string dir, std::string content)
 {
 	time_t now = time(NULL);
@@ -62,9 +70,9 @@ void my::LogSystem::preLog(const char* fileName, const char* funcName)
 
 void my::LogSystem::endline()
 {
-	//boost::thread logThread(boost::bind(&LogSystem::outputLogToFile, this, m_szLogPath, m_SStream.str()));
-	//logThread.detach();
-	outputLogToFile(m_szLogPath, m_SStream.str());
+	boost::thread logThread(boost::bind(&LogSystem::outputLogToFile, this, m_szLogPath, m_SStream.str()));
+	logThread.detach();
+	//outputLogToFile(m_szLogPath, m_SStream.str());
 	m_SStream.str("");
 	setColor(LogSystem::GRAY);
 }

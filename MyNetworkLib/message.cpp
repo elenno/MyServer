@@ -76,6 +76,11 @@ std::string my::NetMessage::getMessage()
 void my::NetMessage::serialize()
 {
 	m_nLen = 0;
+	if (m_nLen + sizeof(m_nProto) + sizeof(m_nPlayerId) + sizeof(m_nNetId) + m_szMessage.length() >= sizeof(m_szStream))
+	{
+		return;
+	}
+
 	memcpy(m_szStream + m_nLen, &m_nProto, sizeof(m_nProto));
 	m_nLen += sizeof(m_nProto);
 
@@ -85,12 +90,17 @@ void my::NetMessage::serialize()
 	memcpy(m_szStream + m_nLen, &m_nNetId, sizeof(m_nNetId));
 	m_nLen += sizeof(m_nNetId);
 
-	memcpy(m_szStream + m_nLen, m_szMessage.c_str(), m_szMessage.length());
+	memcpy(m_szStream + m_nLen, m_szMessage.data(), m_szMessage.length());
 	m_nLen += m_szMessage.length();
 }
 
 bool my::NetMessage::deserialize(const char* buff, int size)
 {
+	if (size >= sizeof(m_szStream))
+	{
+		return false;
+	}
+
 	m_nLen = 0;
 	memcpy(&m_nProto, buff + m_nLen, sizeof(m_nProto));
 	m_nLen += sizeof(m_nProto);

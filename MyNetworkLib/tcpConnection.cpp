@@ -45,6 +45,7 @@ void my::TcpConnection::handle_write(const boost::system::error_code& err, size_
 		//{
 		//	m_Socket.close();
 		//}
+		m_nWriteLen = 0;
 		return;
 	}
 	m_bWriteInProgress = false;
@@ -52,13 +53,13 @@ void my::TcpConnection::handle_write(const boost::system::error_code& err, size_
 	try{
 		boost::mutex::scoped_lock lock(m_WriteMutex);
 		size_t wlen = m_Socket.write_some(buffer(m_WriteBuffer, m_nWriteLen));
+		m_nWriteLen = 0;
 		if (wlen == 0)
 		{
 			//³ö´í
 			printf("Error wlen! wlen = %d\n", wlen);
 			return;
-		}
-		m_nWriteLen = 0;
+		}	
 	}catch(std::exception& e)
 	{
 		std::cout << e.what() << std::endl;
@@ -73,10 +74,10 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 	if (err)
 	{		
 		std::cout << "net_id: " << m_NetId << "  reason: " << err.message() << std::endl;
-		//if (m_Socket.is_open())
-		//{
-		//	m_Socket.close();
-		//}		
+		if (m_Socket.is_open())
+		{
+			m_Socket.close();
+		}		
 		return;
 	}
 	std::cout << "Receive Message: length=" << bytes_transferred <<std::endl; 
@@ -116,6 +117,11 @@ void my::TcpConnection::post_read()
 
 bool my::TcpConnection::sendMessage(NetMessage& msg)
 {
+	if (!m_Socket.is_open())
+	{
+		LogW << "| socket is close, netId=" << m_NetId << LogEnd;
+		return false;
+	}
 	if (msg.getLen() > 8192)
 	{
 		printf("The message is too large to send, len=%d msg=%s\n", msg.getLen(), msg.getStream());

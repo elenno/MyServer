@@ -51,6 +51,7 @@ void my::GateHandler::handleServerMsg(ConnectionPtr conn, NetMessage& msg)
 					int playerId = json["msg"][1u].asInt();
 					int netId = msg.getNetId();
 					gateSvr.onPlayerLogin(playerId, netId);
+					msg.setPlayerId(playerId);
 				}
 			}
 		}
