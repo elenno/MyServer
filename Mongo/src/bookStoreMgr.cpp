@@ -230,7 +230,7 @@ bool my::BookStoreMgr::showReq(Json::Value& req, Json::Value& rsp)
 	}
 	rsp["data"] = data;
 
-	LogD << my::HelpFunctions::tighten(rsp.toStyledString()) << LogEnd;
+	//LogD << my::HelpFunctions::tighten(rsp.toStyledString()) << LogEnd;
 	return true;
 }
 

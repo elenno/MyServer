@@ -8,10 +8,11 @@
 #include "../head/mongoMgr.h"
 #include "helpFunctions.h"
 #include "stringDef.h"
-
+#include "log_system.h"
 
 my::MongoMgr::MongoMgr()
 {
+	LogD << "gogogo" << LogEnd;
 	//connectDB("127.0.0.1");
 }
 
@@ -36,8 +37,8 @@ bool my::MongoMgr::saveJson(const string& col_name, string& query, string& obj)
 	string colName;
 	try
 	{
-		string queryStr = my::HelpFunctions::tighten(query);
-		string objStr = my::HelpFunctions::tighten(obj);
+		string queryStr = util::HelpFunctions::tighten(query);
+		string objStr = util::HelpFunctions::tighten(obj);
 		colName = build_db_name(col_name);
 		m_MongoConn.update(colName, mongo::Query(queryStr), mongo::fromjson(objStr), true);//upsert为true则找不到则插入
 	}
@@ -52,8 +53,8 @@ bool my::MongoMgr::saveJson(const string& col_name, string& query, string& obj)
 
 bool my::MongoMgr::saveJson2(const string& col_name, Json::Value& query, Json::Value& obj)
 {
-	string queryStr = my::HelpFunctions::tighten(query.toStyledString());
-	string objStr = my::HelpFunctions::tighten(obj.toStyledString());
+	string queryStr = util::HelpFunctions::tighten(query.toStyledString());
+	string objStr = util::HelpFunctions::tighten(obj.toStyledString());
 	return saveJson(col_name, queryStr, objStr);
 }
 
@@ -78,7 +79,7 @@ int my::MongoMgr::db_count(const string& col_name, string query  /*= "" */)
 
 Json::Value my::MongoMgr::findJson(const string& col_name, string& query)
 {
-	string queryStr = my::HelpFunctions::tighten(query);
+	string queryStr = util::HelpFunctions::tighten(query);
 	Json::Value ret = Json::Value::null;
 	Json::Reader reader;
 	string colName = build_db_name(col_name);
@@ -102,7 +103,7 @@ Json::Value my::MongoMgr::findJson(const string& col_name, string& query)
 
 Json::Value my::MongoMgr::findJson(const string& col_name, Json::Value& queryJson)
 {
-	string query = my::HelpFunctions::tighten(queryJson.toStyledString());
+	string query = util::HelpFunctions::tighten(queryJson.toStyledString());
 	return findJson(col_name, query);
 }
 

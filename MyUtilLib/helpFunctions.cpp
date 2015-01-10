@@ -2,8 +2,9 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread.hpp>
 #include <fstream>
+#include <boost/date_time/c_time.hpp>
 
-std::string my::HelpFunctions::tighten(const std::string& str)
+std::string util::HelpFunctions::tighten(const std::string& str)
 {
 	bool in_string = false;
 	std::string tmp;
@@ -25,16 +26,22 @@ std::string my::HelpFunctions::tighten(const std::string& str)
 	return tmp;
 }
 
-void my::HelpFunctions::threadSleep(int offset)
+void util::HelpFunctions::threadSleep(int offset)
 {
 	boost::system_time time = boost::get_system_time();
 	time += boost::posix_time::microsec(offset); 
 	boost::thread::sleep(time);
 }
 
-void my::HelpFunctions::threadSleepSecond(int offset)
+void util::HelpFunctions::threadSleepSecond(int offset)
 {
 	boost::system_time time = boost::get_system_time();
 	time += boost::posix_time::seconds(offset); 
 	boost::thread::sleep(time);
+}
+
+tm* util::HelpFunctions::getCurrentTM(tm* pdate)
+{
+	time_t now = time(NULL);
+	return boost::date_time::c_time::localtime(&now, pdate);
 }

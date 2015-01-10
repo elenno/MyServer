@@ -191,22 +191,27 @@ void my::Robot::doAction(Json::Value& msg, int& step, int& playerId)
 	playerId = m_PlayerInfo[db::Player::playerId].asInt();
 	if (m_nStep == protocol::PLAYER_LOGIN_REQ)
 	{
+		LogD << "Player Request Login" << LogEnd;
 		handleLoginReq(msg);
 	}
 	else if (m_nStep == protocol::PLAYER_REGIST_REQ)
 	{
+		LogD << "Player Request Regist" << LogEnd;
 		handleRegistReq(msg);
 	}
 	else if (m_nStep == protocol::PLAYER_CREATE_ROLE_REQ)
 	{
+		LogD << "Player Request CreateRole" << LogEnd;
 		handleCreateRoleReq(msg);
 	}
 	else if (m_nStep == protocol::PLAYER_ENTER_GAME_REQ)
 	{
+		LogD << "Player Request EnterGame" << LogEnd;
 		handleEnterGameReq(msg);
 	}
 	else if (m_nStep == protocol::PLAYER_HEART_BEAT_REQ)
 	{
+		LogD << "Player Request HeartBeat" << LogEnd;
 		handleHeartBeatReq(msg);
 	}
 	else

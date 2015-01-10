@@ -112,8 +112,8 @@ bool my::AccountMgr::saveJson(const string& col_name, string& query, string& obj
 	string colName;
 	try
 	{
-		string queryStr = my::HelpFunctions::tighten(query);
-		string objStr = my::HelpFunctions::tighten(obj);
+		string queryStr = util::HelpFunctions::tighten(query);
+		string objStr = util::HelpFunctions::tighten(obj);
 		colName = build_db_name(col_name);
 		m_MongoConn.update(colName, mongo::Query(queryStr), mongo::fromjson(objStr), true);//upsert为true则找不到则插入
 	}
@@ -147,7 +147,7 @@ int my::AccountMgr::db_count(const string& col_name, string query  /*= "" */)
 
 Json::Value my::AccountMgr::findJson(const string& col_name, string& query)
 {
-	string queryStr = my::HelpFunctions::tighten(query);
+	string queryStr = util::HelpFunctions::tighten(query);
 	Json::Value ret = Json::Value::null;
 	Json::Reader reader;
 	string colName = build_db_name(col_name);

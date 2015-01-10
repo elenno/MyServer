@@ -6,7 +6,6 @@ int main()
 	accountMgr;
 	accountSvr.init();
 	accountSvr.run();
-	
 	while(1)
 	{
 

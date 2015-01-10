@@ -48,7 +48,7 @@ bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)
 		{
 			return false;
 		}
-		std::string tmp = my::HelpFunctions::tighten(rspJson.toStyledString());
+		std::string tmp = util::HelpFunctions::tighten(rspJson.toStyledString());
 		rspMsg.setMessage(tmp);
 		rspMsg.setProto(responseId);
 		rspMsg.setPlayerId(playerId);

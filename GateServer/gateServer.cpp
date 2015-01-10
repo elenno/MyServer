@@ -21,7 +21,7 @@ my::GateServer::~GateServer()
 
 void my::GateServer::init()
 {
-	Json::Value gateConf = my::fileSystem::loadJsonFileEval(jsonconf::gateConf);
+	Json::Value gateConf = util::fileSystem::loadJsonFileEval(jsonconf::gateConf);
 	if (gateConf == Json::nullValue)
 	{
 		LogW << "Error init GateServer, null gateConf" << LogEnd;
@@ -78,7 +78,7 @@ void my::GateServer::handle_connect(ConnectionPtr conn, boost::system::error_cod
 	else
 	{
 		//输出一下这个是成功连接了哪个服务器
-		std::cout << "server name: " << conn->getNetId() << "  connect success!" std::endl;
+		std::cout << "server name: " << conn->getNetId() << "  connect success!" << std::endl;
 
 		//start
 		conn->start();
@@ -268,7 +268,7 @@ void my::GateServer::update()
 		//检查心跳
 		checkHeartBeat(tmp);
 	}
-	HelpFunctions::threadSleep(1);
+	util::HelpFunctions::threadSleep(1);
 	core.getService().post(boost::bind(&GateServer::update, this));
 }
 

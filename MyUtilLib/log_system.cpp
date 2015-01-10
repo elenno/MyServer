@@ -6,73 +6,70 @@
 #include <sstream>
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
+#include "helpFunctions.h"
 
-my::LogSystem::LogSystem()
+util::LogSystem::LogSystem()
+{
+    m_QueueThreadPtr = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&LogSystem::runQueue, this)));
+	m_QueueThreadPtr->detach();
+}
+
+util::LogSystem::~LogSystem()
 {
 
 }
 
-my::LogSystem::~LogSystem()
-{
-
-}
-
-void my::LogSystem::setColor(int color)
+void util::LogSystem::setColor(int color)
 {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),color );
 }
 
-std::stringstream& my::LogSystem::logDebug(const char* fileName, const char* funcName)
+std::stringstream& util::LogSystem::logProcess(std::stringstream& s, const char* fileName, unsigned int lineNum, const char* funcName, tm& date)
 {
-	setColor(LogSystem::GREEN);
-	preLog(fileName, funcName);
-	m_szLogPath = log_debug;
-	return m_SStream;
+	s << "|" << addzero(date.tm_hour) << date.tm_hour << ":" << addzero(date.tm_min) << date.tm_min << ":" << addzero(date.tm_sec) << date.tm_sec << "|" 
+	<< fileName << ":" << lineNum << "(" << funcName << ")|";
+	return s;
 }
 
-std::stringstream& my::LogSystem::logWarn(const char* fileName, const char* funcName)
+void util::LogSystem::outputLogToFile(std::string& dir, std::string& content, tm& date)
 {
-	setColor(LogSystem::YELLOW);
-	preLog(fileName, funcName);
-	m_szLogPath = log_warn;
-	return m_SStream;
-}
-
-std::stringstream& my::LogSystem::logInfo(const char* fileName, const char* funcName)
-{
-	setColor(LogSystem::DARKRED);
-	preLog(fileName, funcName);
-	m_szLogPath = log_info;
-	return m_SStream;
-}
-
-void my::LogSystem::outputLogToFile(std::string dir, std::string content)
-{
-	time_t now = time(NULL);
-	tm* pnow = localtime(&now);
 	std::stringstream ss;
 	std::fstream fs;
-	ss << dir << (1900 + pnow->tm_year) << zero(pnow->tm_mon + 1) << (pnow->tm_mon + 1) << zero(pnow->tm_mday) << pnow->tm_mday << zero(pnow->tm_hour) << pnow->tm_hour << ".log";
+	ss << dir << (1900 + date.tm_year) << addzero(date.tm_mon + 1) << (date.tm_mon + 1) << addzero(date.tm_mday) << date.tm_mday << addzero(date.tm_hour) << date.tm_hour << ".log";
 	fs.open(ss.str(), std::ios::out | std::ios::app);
 	fs << content << std::endl;
-	std::cout << content << std::endl;
 	fs.close();
-
 }
 
-void my::LogSystem::preLog(const char* fileName, const char* funcName)
+void util::LogSystem::endline(std::stringstream& s, int color, std::string dir, tm& date)
 {
-	m_Now = time(NULL);
-	m_pNow = localtime(&m_Now);
-	m_SStream << "|" <<zero(m_pNow->tm_hour) << m_pNow->tm_hour << ":" << zero(m_pNow->tm_min) << m_pNow->tm_min << ":" << zero(m_pNow->tm_sec) << m_pNow->tm_sec << "|" 
-		<< fileName << ":" << funcName << "| ";
+	pushQueue(date, s.str(), dir);
+	setColor(color);
+	std::cout << s.str() << std::endl;
+	setColor(LogSystem::WHITE);
 }
 
-void my::LogSystem::endline()
+void util::LogSystem::pushQueue(tm& date, std::string& content, std::string& dir)
 {
-	boost::thread logThread(boost::bind(&LogSystem::outputLogToFile, this, m_szLogPath, m_SStream.str()));
-	logThread.detach();
-	//outputLogToFile(m_szLogPath, m_SStream.str());
-	m_SStream.str("");
-	setColor(LogSystem::GRAY);
+	LogData tmp;
+	tmp.date = date;
+	tmp.content = content;
+	tmp.dir = dir;
+    boost::recursive_mutex::scoped_lock lock(m_LogMutex);
+	m_LogQueue.push(tmp);
+}
+
+void util::LogSystem::runQueue()
+{
+    while(1)
+	{
+		HelpFunctions::threadSleepSecond(1);
+		//boost::recursive_mutex::scoped_lock lock(m_LogMutex);
+		while(!m_LogQueue.empty())
+		{
+			LogData& data = m_LogQueue.front();
+			outputLogToFile(data.dir, data.content, data.date);
+			m_LogQueue.pop();
+		}		
+	}
 }

@@ -7,13 +7,14 @@
 
 #define Between(X, L, H) (((X) >= (L) && (X) <= (H)))
 
-namespace my
+namespace util
 {
 	namespace HelpFunctions
 	{
 		std::string tighten(const std::string& str);
 		void threadSleep(int offset);
 		void threadSleepSecond(int offset);
+		tm* getCurrentTM(tm* pdate);
 	};
 }
 

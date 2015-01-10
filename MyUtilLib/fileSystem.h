@@ -5,7 +5,7 @@
 #include <json/json.h>
 #include <boost/thread/detail/singleton.hpp>
 
-namespace my
+namespace util
 {
 	namespace fileSystem
 	{

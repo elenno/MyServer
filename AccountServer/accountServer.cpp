@@ -17,7 +17,7 @@ my::AccountServer::~AccountServer()
 
 void my::AccountServer::init()
 {
-	m_AccountConf = my::fileSystem::loadJsonFileEval(jsonconf::accountConf);
+	m_AccountConf = util::fileSystem::loadJsonFileEval(jsonconf::accountConf);
 	if (m_AccountConf == Json::nullValue)
 	{
 		LogW << "Error init GateServer, null gateConf" << LogEnd;

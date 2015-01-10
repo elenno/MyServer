@@ -3,40 +3,66 @@
 
 #include <string>
 #include <sstream>
+#include <queue>
 #include <boost/thread/detail/singleton.hpp>
+#include <boost/thread.hpp>
+#include "helpFunctions.h"
 
-#define logSys boost::detail::thread::singleton<my::LogSystem>::instance()
+#define logSys boost::detail::thread::singleton<util::LogSystem>::instance()
 
-#define zero(NUM) ((NUM) < 10 ? "0" : "")
-
-#define LogEnd \
-std::endl;     \
-logSys.endline()
-
-#define LogD logSys.logDebug(__FILE__, __FUNCTION__)
-#define LogW logSys.logWarn(__FILE__, __FUNCTION__)
-#define LogI logSys.logInfo(__FILE__, __FUNCTION__)
+#define addzero(NUM) ((NUM) < 10 ? "0" : "")
 
 static const std::string log_debug = "log/debug/";
 static const std::string log_warn = "log/warn/";   //要改为读入配置文件
 static const std::string log_info = "log/info/";
 
-namespace my
+#define LogEnd \
+	std::endl;     \
+	logSys.endline(log_ss, log_color, log_path, *log_pdate);\
+	}while(0)
+
+#define LogProcess \
+	tm* log_pdate = NULL;\
+    log_pdate = util::HelpFunctions::getCurrentTM(log_pdate);\
+	std::stringstream log_ss;\
+	logSys.logProcess(log_ss, __FILE__, __LINE__, __FUNCTION__, *log_pdate)
+
+#define LogD \
+	do{\
+        int log_color = util::LogSystem::GREEN;\
+        std::string log_path = log_debug;\
+	    LogProcess
+
+#define LogW \
+	do{\
+	    int log_color = util::LogSystem::YELLOW;\
+	    std::string log_path = log_warn;\
+	    LogProcess
+
+#define LogI \
+	do{\
+	    int log_color = util::LogSystem::BLUE;\
+	    std::string log_path = log_info;\
+	    LogProcess
+
+namespace util
 {
+	struct LogData
+	{
+		std::string dir;
+		std::string content;
+		tm date;
+	};
+
 	class LogSystem
 	{
 	public:
 		LogSystem();
 		~LogSystem();
 
-		std::stringstream& logDebug(const char* fileName, const char* funcName);
-		std::stringstream& logWarn(const char* fileName, const char* funcName);
-		std::stringstream& logInfo(const char* fileName, const char* funcName);
-
-		void preLog(const char* fileName, const char* funcName);
-		void endline();
-		void outputLogToFile(std::string dir, std::string content);
-
+		std::stringstream& logProcess(std::stringstream& s, const char* fileName, unsigned int lineNum, const char* funcName, tm& date);
+		void endline(std::stringstream& s, int color, std::string dir, tm& date);
+		
 		enum Color {    
 			DARKBLUE = 1, 
 			DARKGREEN, 
@@ -57,14 +83,17 @@ namespace my
 
 	private:
 		void setColor(int color);
+		void pushQueue(tm& data, std::string& content, std::string& dir);
+		void runQueue();
+		void outputLogToFile(std::string& dir, std::string& content, tm& date);
 
-		std::stringstream m_SStream;
-		time_t m_Now;
-		tm* m_pNow;	
-		std::string m_szLogPath;
+	private:
+		boost::recursive_mutex m_LogMutex;
+		std::queue<LogData> m_LogQueue; // todo  make a thread to write log into the file which in the queue 
+		boost::shared_ptr<boost::thread> m_QueueThreadPtr;
 	};
 }
 
 
-
+		
 #endif

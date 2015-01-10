@@ -43,10 +43,10 @@ void my::GameServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 
 void my::GameServer::init()
 {
-	Json::Value gameConf = my::fileSystem::loadJsonFileEval(jsonconf::gameConf);
+	Json::Value gameConf = util::fileSystem::loadJsonFileEval(jsonconf::gameConf);
 	if (gameConf == Json::nullValue)
 	{
-		LogW << "Error init GateServer, null gateConf" << LogEnd;
+		LogD << "Error init GateServer, null gateConf" << LogEnd;
 		return;
 	}
 
@@ -89,7 +89,7 @@ void my::GameServer::update()
 	}
 	m_SystemTime = tmp;
 	runMessage();
-	HelpFunctions::threadSleep(1);
+	util::HelpFunctions::threadSleep(1);
 	core.getService().post(boost::bind(&GameServer::update, this));
 }
 

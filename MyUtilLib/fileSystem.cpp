@@ -2,7 +2,7 @@
 #include <json/json.h>
 #include <fstream>
 
-std::string my::fileSystem::loadJsonFile(std::string dir)
+std::string util::fileSystem::loadJsonFile(std::string dir)
 {
 	std::string content;
 	std::string line;
@@ -18,7 +18,7 @@ std::string my::fileSystem::loadJsonFile(std::string dir)
 	return content;
 }
 
-Json::Value my::fileSystem::loadJsonFileEval(std::string dir)
+Json::Value util::fileSystem::loadJsonFileEval(std::string dir)
 {
 	std::string content = loadJsonFile(dir);
 	Json::Reader reader;

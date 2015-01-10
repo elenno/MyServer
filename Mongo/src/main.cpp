@@ -51,7 +51,7 @@ int main()
 		    bool res = mongoMgr.connectDB("127.0.0.1");
 			if (!res)
 			{
-				LogW << "can't connect to Mongo" << LogEnd;
+				//LogD << "can't connect to Mongo" << LogEnd;
 				return 0;
 			}
 			bookStoreMgr;
