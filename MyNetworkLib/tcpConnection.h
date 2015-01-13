@@ -29,7 +29,7 @@ namespace my
 		void setPlayerId(int playerId);
 		int getPlayerId();
 
-		bool sendMessage(NetMessage& msg);
+		int sendMessage(NetMessage& msg);
 		void start();
         void stop();
 

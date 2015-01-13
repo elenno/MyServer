@@ -62,7 +62,7 @@ bool my::PlayerMgr::findPlayer(int playerId, Json::Value& json)
 		if (player == Json::nullValue)
 		{
 			//连数据库都没有，哪儿错了吧？
-			//LogW << "Can't find player: playerId=" << playerId << LogEnd;
+			LogW << "Player doesn't exist: playerId=" << playerId << LogEnd;
 			return false;
 		}
 		//找到后插入map中

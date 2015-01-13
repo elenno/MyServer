@@ -1,6 +1,7 @@
 #include "funcHandler.h"
 #include "message.h"
 #include "helpFunctions.h"
+#include "log_system.h"
 
 my::FuncHandler::FuncHandler()
 {
@@ -36,7 +37,7 @@ bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)
 	ProtoMap::iterator it1 = m_ProtoMap.find(handlerId);
 	if (it == m_HandlerMap.end() || it1 == m_ProtoMap.end())
 	{
-		printf("Can't find funcHandler, handlerId=%d", handlerId);
+		LogW << "Can't find funcHandler, handlerId=" << handlerId << LogEnd;
 		return false;
 	}
 	else

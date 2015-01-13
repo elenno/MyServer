@@ -102,7 +102,7 @@ bool my::AccountMgr::connectDB(const char* ip)
 	bool res = m_MongoConn.connect(ip, errorMsg);
 	if (!res)
 	{
-		printf("Connect MongoDB Failed: %s", errorMsg.c_str());
+		LogE << "Connect MongoDB Failed: " << errorMsg << LogEnd;
 	}
 	return res;
 }
@@ -119,8 +119,8 @@ bool my::AccountMgr::saveJson(const string& col_name, string& query, string& obj
 	}
 	catch(mongo::DBException& e)
 	{
-		printf("caught exception: %s\n", e.what());
-		printf("error dbname:%s, query:%s, obj:%s", colName.c_str(), query.c_str(), obj.c_str());
+		LogE << "caught exception: " << e.what() << LogEnd;
+		LogE << "error dbname:" << colName << " query:" << query << " obj:" << obj << LogEnd;
 		return false;
 	}
 	return true;
@@ -129,7 +129,7 @@ bool my::AccountMgr::saveJson(const string& col_name, string& query, string& obj
 int my::AccountMgr::db_count(const string& col_name, string query  /*= "" */)
 {
 	string colName = build_db_name(col_name);
-	printf("db_count: dbname:%s", col_name.c_str());
+	LogD << "db_count: dbname:" << col_name << LogEnd;
 	mongo::BSONObj bsonQuery;
 	if (query != "")
 	{
@@ -139,8 +139,8 @@ int my::AccountMgr::db_count(const string& col_name, string query  /*= "" */)
 		return m_MongoConn.count(colName);
 	}catch(mongo::DBException& e)
 	{
-		printf("caught exception: %s\n", e.what());
-		printf("for dbname:%s , query:%s\n", colName.c_str(), query.c_str());
+		LogE << "caught exception: " << e.what() << LogEnd;
+		LogE << "error dbname:" << colName << " query:" << query << LogEnd;
 		return 0;
 	}
 }
@@ -164,7 +164,7 @@ Json::Value my::AccountMgr::findJson(const string& col_name, string& query)
 		ret.removeMember("_id");
 	}catch(mongo::DBException& e)
 	{
-		printf("%s| caught exception: %s\n", __FUNCTION__, e.what());
+		LogE << "caught exception: " << e.what() << LogEnd;
 		return Json::Value::null;
 	}	
 	return ret;

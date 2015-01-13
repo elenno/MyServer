@@ -44,18 +44,30 @@ int main()
 
 	try
 	{
+		bool flag = false;
 		do		
 		{
-			gameSvr.init();
+			if (!gameSvr.init())
+			{
+				break;
+			}	
 			gameSvr.run();
+
 		    bool res = mongoMgr.connectDB("127.0.0.1");
 			if (!res)
 			{
-				//LogD << "can't connect to Mongo" << LogEnd;
-				return 0;
+				LogD << "can't connect to Mongo" << LogEnd;
+				break;
 			}
 			bookStoreMgr;
+
+		    flag = true;
 		}while(0);
+
+		if (!flag)
+		{
+			LogE << "Server Init Error! Exit!" << LogEnd;
+		}
 		
 		while(true)
 		{
@@ -96,7 +108,7 @@ int main()
 	}
 	catch (std::exception& e)
 	{
-		std::cout << e.what() << std::endl;
+		LogE << e.what() << LogEnd;
 	}
 	return 0;
 }

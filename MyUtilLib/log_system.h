@@ -15,6 +15,7 @@
 static const std::string log_debug = "log/debug/";
 static const std::string log_warn = "log/warn/";   //要改为读入配置文件
 static const std::string log_info = "log/info/";
+static const std::string log_error = "log/error/";
 
 #define LogEnd \
 	std::endl;     \
@@ -41,9 +42,15 @@ static const std::string log_info = "log/info/";
 
 #define LogI \
 	do{\
-	    int log_color = util::LogSystem::BLUE;\
+	    int log_color = util::LogSystem::GRAY;\
 	    std::string log_path = log_info;\
 	    LogProcess
+
+#define LogE \
+	do{\
+	    int log_color = util::LogSystem::PINK;\
+		std::string log_path = log_error;\
+		LogProcess
 
 namespace util
 {

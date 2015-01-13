@@ -13,7 +13,7 @@ int main()
 	ip::tcp::endpoint end(ip::address::from_string("127.0.0.1"), 10085);
 	std::vector<my::TcpClient::ptr> vClient;
 	std::string prefix = "lin05_";
-	for (int i = 0; i < 200; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		//vEndPoint[i] = new ip::tcp::endpoint(ip::address::from_string("127.0.0.1"), 10086);
 		boost::asio::io_service& s = core.getService();

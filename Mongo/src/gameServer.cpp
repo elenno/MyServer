@@ -22,32 +22,35 @@ void my::GameServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 {
 	if (err)
 	{
-		std::cout << err.message() << std::endl;
+		LogW << "accept error: " << err.message() << LogEnd;
 		conn->getSocket().close();
 		asyncAccept();
 	}
 	
 	else if (conn->getSocket().remote_endpoint().address().to_string() != "127.0.0.1")//判断连接是否gate，不是则断开连接
 	{
-		std::cout << "unknown incoming guest : " << conn->getSocket().remote_endpoint().address().to_string() << std::endl;
+		LogW << "unknown incoming guest : " << conn->getSocket().remote_endpoint().address().to_string() << LogEnd;
 		conn->getSocket().close();
 		asyncAccept();
 	}
 	else
 	{
+		LogD << "Accepted Gate Connection!!" << LogEnd;
 		m_GateConn = conn;
+		ip::tcp::no_delay option(true);
+		m_GateConn->getSocket().set_option(option);
 		m_GateConn->start();
 		asyncAccept();
 	}
 }
 
-void my::GameServer::init()
+bool my::GameServer::init()
 {
 	Json::Value gameConf = util::fileSystem::loadJsonFileEval(jsonconf::gameConf);
 	if (gameConf == Json::nullValue)
 	{
-		LogD << "Error init GateServer, null gateConf" << LogEnd;
-		return;
+		LogE << "Error init GateServer, null gateConf" << LogEnd;
+		return false;
 	}
 
 	int	port = gameConf["port"].asInt();
@@ -65,9 +68,11 @@ void my::GameServer::init()
 
 	asyncAccept();
 
-	std::cout << "Init OK!!!" << std::endl;
+	LogD << "Init Game Server OK!!!" << LogEnd;
 
 	update();
+
+	return true;
 }
 
 void my::GameServer::asyncAccept()

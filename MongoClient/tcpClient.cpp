@@ -27,7 +27,7 @@ void my::TcpClient::run()
 		m_Service.run();
 	}catch(std::exception& e)
 	{
-		std::cout << e.what() << std::endl;
+		LogE << e.what() << LogEnd;
 	}
 	
 }
@@ -47,26 +47,29 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 {
 	if (err)
 	{
-		std::cout << err.message() << std::endl;
-		m_Socket.close();
-		std::cout << "socket closed! reconnect!" << std::endl;
+		LogE << err.message() << LogEnd;
+		if (m_Socket.is_open())
+		{
+			m_Socket.close();
+		}
+		LogW << "socket closed! reconnect!" << LogEnd;
 		post_connect();
 		return;
 	}
 	LogI << "connect ok!! name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << LogEnd;
-	std::cout << "connect ok!" << " name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << std::endl;
-	try{
-	static ip::tcp::no_delay option(true);
-	m_Socket.set_option(option);
-	m_Robot.reset();
 	
-	post_read();
-	do_some_thing();
+	try{
+	    static ip::tcp::no_delay option(true);
+	    m_Socket.set_option(option);
+	    m_Robot.reset();
+	
+	    post_read();
+	    do_some_thing();
 	//post_write();
 	//m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
     }catch(std::exception& e)
     {
-	    std::cout << e.what() << std::endl;
+	    LogE << e.what() << LogEnd;
     }
 }
 
@@ -148,8 +151,6 @@ void my::TcpClient::post_read()
 }
 void my::TcpClient::handle_write(const boost::system::error_code& err, size_t bytes_transferred)
 {
-	//LogD << "Send msg: len=" << m_nWriteLen << LogEnd;
-	LogD << "Send msg: len=" << m_nWriteLen << " name=" << m_Robot.getAccountInfo()[db::Account::userName].asString() << LogEnd;
 	memset(m_WriteBuff, 0, sizeof(m_WriteBuff));
 	m_nWriteLen = 0;
 	if (err)
@@ -158,19 +159,15 @@ void my::TcpClient::handle_write(const boost::system::error_code& err, size_t by
 		{
 	        m_Socket.close();
 		}
-		//LogW << "some error occur:" << err.message() << " Socket closed! reconnect!" << LogEnd;
 		LogW << "socket closed! reconnect!" << LogEnd;
 		post_connect();
 	}
-	
-
 }
 
 void my::TcpClient::handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
 	if (err)
 	{
-		//LogW << "some error occur:" << err.message() << " Socket closed! reconnect!" << LogEnd;
 		if (m_Socket.is_open())
 		{
 			m_Socket.close();

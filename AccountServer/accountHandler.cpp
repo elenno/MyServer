@@ -16,8 +16,7 @@ my::AccountHandler::~AccountHandler()
 void my::AccountHandler::onRecv(ConnectionPtr conn, NetMessage& req)
 {
     int protoId = req.getProto();
-	std::cout << "!!!recv!!!" << std::endl;
-	LogD << "Recv msg: " << req.getMessage() << "  protocol:" << req.getProto() << LogEnd;
+	LogD << "Recv msg: " << req.getMessage() << "  protocol:" << req.getProto() << "  length:" << req.getLen() << LogEnd;
 	if (protoId <= my::protocol::ACCOUNT_BEGIN || protoId >= my::protocol::ACCOUNT_END)
 	{
 		LogW << "Unknown protocol, protoId=" << protoId << LogEnd;

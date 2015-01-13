@@ -28,21 +28,21 @@ void my::AccountServer::init()
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 	asyncAccept();
 
-	std::cout << "Init OK!!!" << std::endl;
+	LogD << "Init Account Server OK!!!" << LogEnd;
 }
 
 void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_code err)
 {
 	if (err)
 	{
-		std::cout << err.message() << std::endl;
+		LogE << err.message() << LogEnd;
 		conn->getSocket().close();
 		asyncAccept();
 	}
 	else if (conn->getSocket().remote_endpoint().address().to_string() != m_AccountConf["gateSvrIp"].asString()
 		&& conn->getSocket().remote_endpoint().port() != m_AccountConf["gateSvrPort"].asUInt())//判断连接是否gate，不是则断开连接
 	{
-		std::cout << "unknown incoming guest : " << conn->getSocket().remote_endpoint().address().to_string() << std::endl;
+		LogW << "unknown incoming guest : " << conn->getSocket().remote_endpoint().address().to_string() << LogEnd;
 		conn->getSocket().close();
 		asyncAccept();
 	}
@@ -50,6 +50,8 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 	{
 		m_GateConn = conn;
 		m_GateConn->setNetId(server_id::GATE_SVR);
+		static ip::tcp::no_delay option(true);
+		m_GateConn->getSocket().set_option(option);
 		m_GateConn->start();
 		asyncAccept();
 	}

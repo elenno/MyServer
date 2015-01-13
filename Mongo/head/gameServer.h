@@ -24,7 +24,7 @@ namespace my
 		~GameServer();
 
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
-		void init();
+		bool init();
 		void asyncAccept();
 		void update();
 		void pushMessage(NetMessage& msg);

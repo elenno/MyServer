@@ -12,7 +12,6 @@
 
 my::MongoMgr::MongoMgr()
 {
-	LogD << "gogogo" << LogEnd;
 	//connectDB("127.0.0.1");
 }
 

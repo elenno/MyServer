@@ -46,7 +46,7 @@ void my::GateServer::init()
 	connectToGameSvr(gameSvrIp, gameSvrPort);
 	connectToAccountSvr(accountSvrIp, accountSvrPort);
 
-	std::cout << "Init ok!!!" << std::endl;
+	LogD << "Init Gate Server Ok!!!" << LogEnd;
 
 	update();
 }
@@ -71,15 +71,20 @@ void my::GateServer::handle_connect(ConnectionPtr conn, boost::system::error_cod
 {
 	if (err)
 	{
-		std::cout << "server name: " << conn->getNetId() << "  connect error: " << err.message() << std::endl;
-		conn->getSocket().close();
+		LogW << "server name: " << conn->getNetId() << "  connect error: " << err.message() << LogEnd;
+		if (conn->getSocket().is_open())
+		{
+			LogW << "Close Socket!!" << LogEnd;
+			conn->getSocket().close();
+		}
 		return;
 	}
 	else
 	{
 		//输出一下这个是成功连接了哪个服务器
-		std::cout << "server name: " << conn->getNetId() << "  connect success!" << std::endl;
-
+		LogD << "server name: " << conn->getNetId() << "  connect success!" << LogEnd;
+		static ip::tcp::no_delay option(true);
+		conn->getSocket().set_option(option);
 		//start
 		conn->start();
 	}
@@ -89,7 +94,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 {
 	if (err)
 	{
-		std::cout << err.message() << std::endl;
+		LogE << err.message() << LogEnd;
 		conn->getSocket().close();
 		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
@@ -97,11 +102,12 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 	else
 	{
 		//new incomming player!!!
-		std::cout << conn->getSocket().remote_endpoint().address() << " " << conn->getSocket().remote_endpoint().port() << std::endl;
+		LogD << conn->getSocket().remote_endpoint().address() << " " << conn->getSocket().remote_endpoint().port() << LogEnd;
 
 		boost::recursive_mutex::scoped_lock lock(mtx);
-		
 		conn->setNetId(m_nNetIdHolder);
+		ip::tcp::no_delay option(true);
+		conn->getSocket().set_option(option);
 		m_ConnMap.insert(std::make_pair<int, ConnectionPtr>(m_nNetIdHolder, conn));		
 		conn->start();
 		m_nNetIdHolder = (m_nNetIdHolder + 1) % MAX_NET_ID;
@@ -120,7 +126,7 @@ void my::GateServer::connect(std::string ipaddr, std::string port, ConnectionPtr
 	ip::tcp::resolver::iterator iter = rslv.resolve(q, err);
 	if (err)
 	{
-		std::cout << err.message() << std::endl;
+		LogE << err.message() << LogEnd;
 		return;
 	}
 	async_connect(conn->getSocket(), iter, boost::bind(&GateServer::handle_connect, this, conn, boost::asio::placeholders::error));
@@ -130,7 +136,7 @@ void my::GateServer::sendToGameSvr(NetMessage& msg)
 {
 	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
-	if(!m_pGameConn->sendMessage(tmp))
+	if(0 != m_pGameConn->sendMessage(tmp))
 	{
 		LogW << "send msg to gameSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
 	}
@@ -140,10 +146,10 @@ void my::GateServer::sendToAccountSvr(NetMessage& msg)
 {
 	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
-	LogD << "send msg to gameSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
-	if(!m_pAccountConn->sendMessage(tmp))
+	LogD << "send msg to accountSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+	if(0 != m_pAccountConn->sendMessage(tmp))
 	{
-		LogW << "send msg to gameSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+		LogW << "send msg to accountSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
 	}
 }
 
@@ -155,7 +161,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	bool flag = false;
 	if (it == m_PlayerMap.end())
 	{
-		LogW << "| Player not online, playerId=" << playerId << LogEnd;
+		LogW << "| Player not online, try ConnMap, playerId=" << playerId << LogEnd;
 		it = m_ConnMap.find(netId);
 		flag = true;
 		if (it == m_ConnMap.end())
@@ -168,7 +174,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	if (!playerConn->getSocket().is_open())
 	{
 		//socket already closed!!!
-		LogW << "| Socket closed! netId=" << netId << LogEnd;
+		LogW << "Socket closed! netId=" << netId << LogEnd;
 		//kick player
 		kickConnection(playerConn);
 		return;
@@ -176,7 +182,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 
 	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
-	if (!playerConn->sendMessage(tmp))
+	if (0 != playerConn->sendMessage(tmp))
 	{
 		LogW << "| Send Msg To Player Failed, playerId=" << playerId << LogEnd;
 	}
@@ -291,14 +297,14 @@ void my::GateServer::checkServerAlive(boost::system_time time)
 {
 	if (!m_pAccountConn->getSocket().is_open())
 	{
-		std::cout << "lost connection with accountSvr, reconnecting..." << std::endl;
+		LogW << "lost connection with accountSvr, reconnecting..." << LogEnd;
 		std::string accountSvrIp = m_GateConf["accountSvrIp"].asString();
 		int accountSvrPort = m_GateConf["accountSvrPort"].asInt();
 		connectToAccountSvr(accountSvrIp, accountSvrPort);
 	}
 	if (!m_pGameConn->getSocket().is_open())
 	{
-		std::cout << "lost connection with gameSvr, reconnecting..." << std::endl;
+		LogW << "lost connection with gameSvr, reconnecting..." << LogEnd;
 		std::string gameSvrIp = m_GateConf["gameSvrIp"].asString();
 		int gameSvrPort = m_GateConf["gameSvrPort"].asInt();
 		connectToGameSvr(gameSvrIp, gameSvrPort);
