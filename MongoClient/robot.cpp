@@ -226,3 +226,8 @@ void my::Robot::reset()
 {
 	m_nStep = protocol::PLAYER_LOGIN_REQ;
 }
+
+std::string my::Robot::getUserName()
+{
+	return m_AccountInfo[db::Account::userName].asString();
+}

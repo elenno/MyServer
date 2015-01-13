@@ -83,10 +83,16 @@ void my::GateServer::handle_connect(ConnectionPtr conn, boost::system::error_cod
 	{
 		//输出一下这个是成功连接了哪个服务器
 		LogD << "server name: " << conn->getNetId() << "  connect success!" << LogEnd;
-		static ip::tcp::no_delay option(true);
-		conn->getSocket().set_option(option);
-		//start
-		conn->start();
+		try
+		{
+			static ip::tcp::no_delay option(true);
+			conn->getSocket().set_option(option);
+			//start
+			conn->start();
+		}catch(std::exception& e)
+		{
+			LogE << "Connect to server EXCEPTION!!! server=" << conn->getNetId() << "  reason=" << e.what() << LogEnd;
+		}	
 	}
 }
 
@@ -184,7 +190,7 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	tmp.serialize();
 	if (0 != playerConn->sendMessage(tmp))
 	{
-		LogW << "| Send Msg To Player Failed, playerId=" << playerId << LogEnd;
+		LogW << "Send Msg To Player Failed, playerId=" << playerId << LogEnd;
 	}
 }
 

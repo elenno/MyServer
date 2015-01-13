@@ -115,5 +115,6 @@ bool my::NetMessage::deserialize(const char* buff, int size)
 	size -= sizeof(m_nNetId);
 
 	m_szMessage.assign(buff + m_nLen, size);
+	m_nLen += size;
 	return true;
 }

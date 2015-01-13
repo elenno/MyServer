@@ -21,6 +21,8 @@ namespace my
 		void handleMsg(NetMessage& msg);
 		void reset();
 
+		std::string getUserName();
+
 	public:
 		void handleLoginReq(Json::Value& msg);
 		void handleLoginRsp(Json::Value& msg);

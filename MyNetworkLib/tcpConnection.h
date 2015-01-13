@@ -45,8 +45,10 @@ namespace my
 		char m_WriteBuffer[8192];
 		int m_nWriteLen;   
 		bool m_bWriteInProgress;
+		bool m_bReadInProgress;
+		boost::mutex m_ReadMutex;
 		boost::mutex m_WriteMutex;
-		int m_NetId; //记录玩家id或服务器id
+		int m_nNetId; //记录玩家id或服务器id
 		BasePtr m_pHandler;
 		boost::system_time m_HeartBeat;
 		int m_nPlayerId;

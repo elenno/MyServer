@@ -52,7 +52,7 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 		{
 			m_Socket.close();
 		}
-		LogW << "socket closed! reconnect!" << LogEnd;
+		LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
 		post_connect();
 		return;
 	}
@@ -69,7 +69,7 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 	//m_Service.post(boost::bind(&TcpClient::post_write, shared_from_this()));
     }catch(std::exception& e)
     {
-	    LogE << e.what() << LogEnd;
+	    LogE << "Caught Exception: user=" << m_Robot.getUserName() << "  reason=" << e.what() << LogEnd;
     }
 }
 
@@ -78,7 +78,7 @@ void my::TcpClient::post_write()
 	//just for test
 	if (!m_Socket.is_open())
 	{
-		LogW << "socket closed! reconnect!" << LogEnd;
+		LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
 		post_connect();
 		return;
 	}
@@ -131,23 +131,32 @@ void my::TcpClient::post_write()
 //	memcpy(m_WriteBuff, tmp.c_str(), tmp.length());
 //	m_nWriteLen += tmp.length();
 	
-	m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
-		boost::asio::placeholders::error,
-		boost::asio::placeholders::bytes_transferred));
-	
+	try {
+		m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
+			boost::asio::placeholders::error,
+			boost::asio::placeholders::bytes_transferred));
+	}catch (std::exception& e)
+	{
+		LogE << "Caught Exception:  user=" << m_Robot.getUserName() << "  reason=" <<  e.what() << LogEnd;
+	}
 }
 
 void my::TcpClient::post_read()
 {
-	if (!m_Socket.is_open())
-	{
-        LogW << "socket closed! reconnect!" << LogEnd;
-		post_connect();
-		return;
-	}
-	memset(m_ReadBuff, 0, sizeof(m_ReadBuff));
-	m_Socket.async_read_some(buffer(m_ReadBuff), boost::bind(&TcpClient::handle_read, shared_from_this(), 
+	try{
+		if (!m_Socket.is_open())
+		{
+			LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
+			post_connect();
+			return;
+		}
+		memset(m_ReadBuff, 0, sizeof(m_ReadBuff));
+		m_Socket.async_read_some(buffer(m_ReadBuff), boost::bind(&TcpClient::handle_read, shared_from_this(), 
 			boost::asio::placeholders::error,	boost::asio::placeholders::bytes_transferred));
+	}catch(std::exception& e){
+		LogE << "Caught Exception: user=" << m_Robot.getUserName() << "  reason=" << e.what() << LogEnd;
+	}
+	
 }
 void my::TcpClient::handle_write(const boost::system::error_code& err, size_t bytes_transferred)
 {
@@ -159,7 +168,7 @@ void my::TcpClient::handle_write(const boost::system::error_code& err, size_t by
 		{
 	        m_Socket.close();
 		}
-		LogW << "socket closed! reconnect!" << LogEnd;
+		LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
 		post_connect();
 	}
 }
@@ -172,7 +181,7 @@ void my::TcpClient::handle_read(const boost::system::error_code& err, size_t byt
 		{
 			m_Socket.close();
 		}
-		LogW << "socket closed! reconnect!" << LogEnd;
+		LogW << "socket closed! reconnect!user=" << m_Robot.getUserName() << LogEnd;
 		post_connect();
 		return;
 	}
