@@ -155,7 +155,7 @@ Json::Value my::AccountMgr::findJson(const string& col_name, string query)
 		mongo::BSONObj obj = m_MongoConn.findOne(colName, queryStr);
 		if (obj.isEmpty())
 		{
-			Json::Value::null;
+			return Json::Value::null;
 		}
 		if (!reader.parse(obj.jsonString(), ret))
 		{
