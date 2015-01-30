@@ -30,7 +30,7 @@ all: $(TARGETS)
 $(TARGETS): $(OBJS)   
 	@echo "start building..$@"
 	ar -r $(TARGETS) $(OBJS)
-	cp $@ $(SVR_PROJ_PATH)/lib
+	cp -f $@ $(SVR_PROJ_PATH)/lib
 	@echo
 
 .c.o:

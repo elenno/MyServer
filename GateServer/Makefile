@@ -25,7 +25,7 @@ RM = rm -f
 
 OBJS=$(patsubst %.cpp, %.o, $(wildcard *.cpp))
 
-TARGETS=accountsvr
+TARGETS=gatesvr
 
 all: $(TARGETS)
 
