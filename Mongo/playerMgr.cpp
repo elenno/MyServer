@@ -5,6 +5,7 @@
 #include "funcHandler.h"
 #include "stringDef.h"
 #include "protocol.h"
+#include "gameServer.h"
 
 
 my::PlayerMgr::PlayerMgr()

@@ -7,6 +7,7 @@
 #include "book.h"
 #include <string>
 #include "stringDef.h"
+#include <nedmalloc/nedmalloc.h>
 
 using namespace std;
 
