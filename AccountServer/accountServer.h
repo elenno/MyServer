@@ -28,13 +28,12 @@ namespace my
 		~AccountServer();
 
 		void init();
-
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
 		void asyncAccept();
 
 	private:
         
-		Json::Value m_AccountConf;
+		Json::Value m_SvrConf;
 		AcceptorPtr m_pAcceptor;
 		ConnectionPtr m_GateConn;
 	};

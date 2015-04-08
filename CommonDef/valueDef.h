@@ -8,6 +8,7 @@ namespace my
 		static const int GAME_SVR = -1;
 		static const int ACCOUNT_SVR = -2;
 		static const int GATE_SVR = -3;
+		static const int MYSQL_SVR = -4;
 	}
 }
 

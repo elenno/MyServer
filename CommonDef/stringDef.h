@@ -11,9 +11,7 @@ namespace my
 {
 	namespace jsonconf
 	{
-		static const std::string gateConf = "../config/static/gateSvr/gateSvr.json";
-		static const std::string gameConf = "../config/static/gameSvr/gameSvr.json";
-		static const std::string accountConf = "../config/static/accountSvr/accountSvr.json";
+		static const std::string server_config = "../config/static/server_config.json";
 		static const std::string log_config = "config/log_config.json";
 	}
 

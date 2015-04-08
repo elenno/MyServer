@@ -17,13 +17,13 @@ my::AccountServer::~AccountServer()
 
 void my::AccountServer::init()
 {
-	m_AccountConf = util::fileSystem::loadJsonFileEval(jsonconf::accountConf);
-	if (m_AccountConf == Json::nullValue)
+	m_SvrConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
+	if (m_SvrConf == Json::nullValue)
 	{
-		LogW << "Error init GateServer, null gateConf" << LogEnd;
+		LogW << "Error init AccountServer, null gateConf" << LogEnd;
 		return;
 	}
-	int	port = m_AccountConf["port"].asInt();
+	int	port = m_SvrConf["accountSvrPort"].asInt();
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 	asyncAccept();
@@ -39,8 +39,8 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 		conn->getSocket().close();
 		asyncAccept();
 	}
-	else if (conn->getSocket().remote_endpoint().address().to_string() != m_AccountConf["gateSvrIp"].asString()
-		&& conn->getSocket().remote_endpoint().port() != m_AccountConf["gateSvrPort"].asUInt())//判断连接是否gate，不是则断开连接
+	else if (conn->getSocket().remote_endpoint().address().to_string() != m_SvrConf["gateSvrIp"].asString()
+		&& conn->getSocket().remote_endpoint().port() != m_SvrConf["gateSvrPort"].asUInt())//判断连接是否gate，不是则断开连接
 	{
 		LogW << "unknown incoming guest : " << conn->getSocket().remote_endpoint().address().to_string() << LogEnd;
 		conn->getSocket().close();

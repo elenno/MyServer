@@ -1,0 +1,10 @@
+{
+    "gameSvrIp" : "127.0.0.1",
+	"gameSvrPort" : 10086,
+	"gateSvrIp" : "127.0.0.1",
+	"gateSvrPort" : 10085,
+	"accountSvrIp" : "127.0.0.1",
+	"accountSvrPort" : 10084,
+	"mysqlSvrIp" : "127.0.0.1",
+	"mysqlSvrPort" : 10083
+}

@@ -46,14 +46,14 @@ void my::GameServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 
 bool my::GameServer::init()
 {
-	Json::Value gameConf = util::fileSystem::loadJsonFileEval(jsonconf::gameConf);
+	Json::Value gameConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (gameConf == Json::nullValue)
 	{
-		LogE << "Error init GateServer, null gateConf" << LogEnd;
+		LogE << "Error init GameServer, null gameConf" << LogEnd;
 		return false;
 	}
 
-	int	port = gameConf["port"].asInt();
+	int	port = gameConf["gameSvrPort"].asInt();
 	std::string gameSvrIp = gameConf["gameSvrIp"].asString();
 	int gameSvrPort = gameConf["gameSvrPort"].asInt();
 

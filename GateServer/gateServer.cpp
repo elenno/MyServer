@@ -21,14 +21,14 @@ my::GateServer::~GateServer()
 
 void my::GateServer::init()
 {
-	Json::Value gateConf = util::fileSystem::loadJsonFileEval(jsonconf::gateConf);
+	Json::Value gateConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (gateConf == Json::nullValue)
 	{
 		LogW << "Error init GateServer, null gateConf" << LogEnd;
 		return;
 	}
 	m_GateConf = gateConf;
-	int	port = gateConf["port"].asInt();
+	int	port = gateConf["gateSvrPort"].asInt();
 	std::string gameSvrIp = gateConf["gameSvrIp"].asString();
 	int gameSvrPort = gateConf["gameSvrPort"].asInt();
 	std::string accountSvrIp = gateConf["accountSvrIp"].asString();
