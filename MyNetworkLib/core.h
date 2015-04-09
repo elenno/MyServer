@@ -29,7 +29,7 @@ namespace my
 		size_t m_nNextIndex;
 		std::vector<servicePtr> m_ServicePool;
 		std::vector<workPtr> m_WorkPool;
-		std::vector<boost::shared_ptr<boost::thread>> m_ServiceThreads;
+		std::vector<boost::shared_ptr<boost::thread> > m_ServiceThreads;
 	};
 }
 
