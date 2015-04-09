@@ -20,9 +20,9 @@ namespace my
 
 		//db
 		bool connectDB(const char* ip);
-		bool saveJson(const string& col_name, string& query, string& obj);
+		bool saveJson(const string& col_name, string query, string obj);
 		int db_count(const string& col_name, string query = "");
-		Json::Value findJson(const string& col_name, string& query);
+		Json::Value findJson(const string& col_name, string query);
 		std::string build_db_name(const std::string& colName);
 
 	private:

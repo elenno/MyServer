@@ -107,7 +107,7 @@ bool my::AccountMgr::connectDB(const char* ip)
 	return res;
 }
 
-bool my::AccountMgr::saveJson(const string& col_name, string& query, string& obj)
+bool my::AccountMgr::saveJson(const string& col_name, string query, string obj)
 {
 	string colName;
 	try
@@ -145,7 +145,7 @@ int my::AccountMgr::db_count(const string& col_name, string query  /*= "" */)
 	}
 }
 
-Json::Value my::AccountMgr::findJson(const string& col_name, string& query)
+Json::Value my::AccountMgr::findJson(const string& col_name, string query)
 {
 	string queryStr = util::HelpFunctions::tighten(query);
 	Json::Value ret = Json::Value::null;
