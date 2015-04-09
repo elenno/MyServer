@@ -8,7 +8,7 @@
 #include <iostream>
 #include "client/dbclient.h"
 #include "bson/bsonobj.h"
-#include "../head/bookStoreMgr.h"
+#include "bookStoreMgr.h"
 #include <boost/asio.hpp>
 #include <string>
 #include<string.h>
@@ -17,8 +17,8 @@
 #include <boost/asio/ip/basic_endpoint.hpp>
 #include "file_system.h"
 #include "log_system.h"
-#include "../head/mongoMgr.h"
-#include "../head/gameServer.h"
+#include "mongoMgr.h"
+#include "gameServer.h"
 #pragma comment(lib,"ws2_32.lib")
 using namespace mongo;
 using namespace std;

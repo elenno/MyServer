@@ -1,9 +1,9 @@
-#include "../head/gameHandler.h"
+#include "gameHandler.h"
 #include "tcpConnection.h"
 #include "funcHandler.h"
 #include "log_system.h"
 #include "protocol.h"
-#include "../head/gameServer.h"
+#include "gameServer.h"
 
 my::GameHandler::GameHandler()
 {

@@ -4,7 +4,7 @@
  *  Created on: 2014-9-9
  *      Author: Administrator
  */
-#include "../head/book.h"
+#include "book.h"
 #include <string>
 #include "stringDef.h"
 

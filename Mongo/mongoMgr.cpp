@@ -5,7 +5,7 @@
  *      Author: Administrator
  */
 
-#include "../head/mongoMgr.h"
+#include "mongoMgr.h"
 #include "helpFunctions.h"
 #include "stringDef.h"
 #include "log_system.h"

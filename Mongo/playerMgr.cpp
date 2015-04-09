@@ -1,5 +1,5 @@
-#include "../head/playerMgr.h"
-#include "../head/mongoMgr.h"
+#include "playerMgr.h"
+#include "mongoMgr.h"
 #include "helpFunctions.h"
 #include "log_system.h"
 #include "funcHandler.h"

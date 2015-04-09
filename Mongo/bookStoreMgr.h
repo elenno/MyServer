@@ -9,7 +9,7 @@
 #define __BOOK_STORE_MGR_H__
 
 #include <boost/thread/detail/singleton.hpp>
-#include "../head/book.h"
+#include "book.h"
 #include "nedmalloc/nedmalloc.h"
 #include "common.h"
 #include "json/json.h"

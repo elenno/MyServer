@@ -5,8 +5,8 @@
  *      Author: Administrator
  */
 
-#include "../head/bookStoreMgr.h"
-#include "../head/mongoMgr.h"
+#include "bookStoreMgr.h"
+#include "mongoMgr.h"
 #include "funcHandler.h"
 #include "log_system.h"
 #include "helpFunctions.h"
