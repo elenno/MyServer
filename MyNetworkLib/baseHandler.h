@@ -13,7 +13,7 @@ namespace my
 		typedef boost::shared_ptr<TcpConnection> ConnectionPtr;
 
 		BaseHandler(){};
-		virtual ~BaseHandler() = 0 {};
+		virtual ~BaseHandler(){};
 
 		virtual void onRecv(ConnectionPtr conn, NetMessage& req) = 0;
 
