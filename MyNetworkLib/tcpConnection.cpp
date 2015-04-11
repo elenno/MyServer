@@ -80,7 +80,7 @@ void my::TcpConnection::handle_write(const boost::system::error_code& err, size_
 }
 void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
-	boost::mutex::scoped_lock lock(m_ReadMutex);
+	m_bReadInProgress = false;
 	if (err)
 	{		
 		LogW << "net_id: " << m_nNetId << "  reason: " << err.message() << LogEnd;
@@ -88,38 +88,41 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 		{
 			m_Socket.close();
 		}
-		m_bReadInProgress = false;
 		return;
 	}
-	LogD << "Receive Message: length=" << bytes_transferred << LogEnd;
-	m_bReadInProgress = false;
-	//try{
-	int total_len = bytes_transferred;
-	int offset = 0;
-	while(total_len > 0)
-	{
-		NetMessage reqMsg;
-		int res = reqMsg.deserialize(m_ReadBuffer + offset, total_len);
-		if (0 == res)
+	//LogD << "Receive Message: length=" << bytes_transferred << LogEnd;
+	boost::system::error_code errrr;
+	try{
+		boost::mutex::scoped_lock lock(m_ReadMutex);
+		int total_len = m_Socket.read_some(buffer(m_ReadBuffer, MSG_MAXIMUM), errrr);
+		if (!errrr)
 		{
-			//解包错误
-			LogW << "Deserialize Message Error" << LogEnd;
-			//可以考虑踢掉客户端
-			break;
-		}
-		else
-		{
-			total_len -= res;
-			offset += res;
-			LogD << "Receive Message: netId=" << getNetId() << "  length=" << reqMsg.getLen() << "  content=" << reqMsg.getMessage() << LogEnd;
-			m_pHandler->onRecv(shared_from_this(), reqMsg);
-		}
+			int offset = 0;
+			while(total_len > 0)
+			{
+				NetMessage reqMsg;
+				int res = reqMsg.deserialize(m_ReadBuffer + offset, total_len);
+				if (0 == res)
+				{
+					//解包错误
+					LogW << "Deserialize Message Error" << LogEnd;
+					//可以考虑踢掉客户端
+					break;
+				}
+				else
+				{
+					total_len -= res;
+					offset += res;
+					LogD << "Receive Message: netId=" << getNetId() << "  length=" << reqMsg.getLen() << "  content=" << reqMsg.getMessage() << LogEnd;
+					m_pHandler->onRecv(shared_from_this(), reqMsg);
+				}
+			}
+		}	
 	}
-	//}
-	//catch (std::exception& e)
-	//{
-	//	LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
-	//}
+	catch (std::exception& e)
+	{
+		LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+	}
 	post_read();
 }
 
@@ -149,7 +152,7 @@ void my::TcpConnection::post_read()
 			return;
 		}
 		m_bReadInProgress = true;
-		m_Socket.async_read_some(buffer(m_ReadBuffer), boost::bind(&TcpConnection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+		m_Socket.async_read_some(boost::asio::null_buffers(), boost::bind(&TcpConnection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	}catch (std::exception& e)
 	{
 		LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
