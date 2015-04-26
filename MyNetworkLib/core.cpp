@@ -14,6 +14,14 @@ my::Core::Core()
 		m_ServicePool.push_back(ptr);
 		m_WorkPool.push_back(work);
 	}
+	m_pLogicService = servicePtr(new boost::asio::io_service());
+	m_pHttpService = servicePtr(new boost::asio::io_service());
+	m_pLogicWork = workPtr(new boost::asio::io_service::work(*m_pLogicService));
+	m_pHttpWork = workPtr(new boost::asio::io_service::work(*m_pHttpService));
+	m_ServicePool.push_back(m_pLogicService);
+	m_ServicePool.push_back(m_pHttpService);
+	m_WorkPool.push_back(m_pLogicWork);
+	m_WorkPool.push_back(m_pHttpWork);
 }
 
 my::Core::~Core()
@@ -50,4 +58,9 @@ boost::asio::io_service& my::Core::getService()
 	boost::asio::io_service& service = *(m_ServicePool[m_nNextIndex]);
 	m_nNextIndex = (m_nNextIndex + 1) % m_nPoolSize;
 	return service;
+}
+
+boost::asio::io_service& my::Core::getHttpService()
+{
+	return *m_pHttpService;
 }

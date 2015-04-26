@@ -9,7 +9,7 @@ my::NetMessage::NetMessage(std::string& json_str, int proto, int playerId, int n
 	m_nNetId = netId;
 	m_nLen = 0;
 	m_nContentLength = json_str.length();
-	m_szStream = NULL;
+	m_szStream = new char[MSG_MAXIMUM];
 }
 
 my::NetMessage::NetMessage()
@@ -19,7 +19,7 @@ my::NetMessage::NetMessage()
 	m_nPlayerId = 0;
 	m_nNetId = 0;
 	m_nContentLength = 0;
-	m_szStream = NULL;
+	m_szStream = new char[MSG_MAXIMUM];
 }
 
 my::NetMessage::~NetMessage()
@@ -84,7 +84,6 @@ bool my::NetMessage::serialize()
 	{
 		return false;
 	}
-	m_szStream = new char[MSG_HEAD + m_szMessage.length()];
 
 	m_nLen = 0;
 
