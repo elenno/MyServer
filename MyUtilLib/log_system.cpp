@@ -47,7 +47,8 @@ void util::LogSystem::outputLogToFile(std::string& dir, std::string& content, tm
 
 void util::LogSystem::endline(std::stringstream& s, int color, std::string dir, tm& date)
 {
-	pushQueue(date, s.str(), dir);
+	std::string strtmp = s.str();
+	pushQueue(date, strtmp, dir);
 	setColor(color);
 	std::cout << s.str() << std::endl;
 	setColor(LogSystem::WHITE);
