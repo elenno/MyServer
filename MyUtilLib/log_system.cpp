@@ -1,5 +1,7 @@
 #include "log_system.h"
+#if defined(_WIN32)
 #include "windows.h"
+#endif
 #include <time.h>
 #include <iostream>
 #include <fstream>
@@ -21,7 +23,9 @@ util::LogSystem::~LogSystem()
 
 void util::LogSystem::setColor(int color)
 {
+#if defined(_WIN32)
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),color );
+#endif
 }
 
 std::stringstream& util::LogSystem::logProcess(std::stringstream& s, const char* fileName, unsigned int lineNum, const char* funcName, tm& date)
