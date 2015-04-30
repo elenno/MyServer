@@ -40,14 +40,16 @@ void util::LogSystem::outputLogToFile(std::string& dir, std::string& content, tm
 	std::stringstream ss;
 	std::fstream fs;
 	ss << dir << (1900 + date.tm_year) << addzero(date.tm_mon + 1) << (date.tm_mon + 1) << addzero(date.tm_mday) << date.tm_mday << addzero(date.tm_hour) << date.tm_hour << ".log";
-	fs.open(ss.str(), std::ios::out | std::ios::app);
+	std::string strtmp = ss.str();
+	fs.open(strtmp, std::ios::out | std::ios::app);
 	fs << content << std::endl;
 	fs.close();
 }
 
 void util::LogSystem::endline(std::stringstream& s, int color, std::string dir, tm& date)
 {
-	pushQueue(date, s.str(), dir);
+	std::string strtmp = s.str();
+	pushQueue(date, strtmp, dir);
 	setColor(color);
 	std::cout << s.str() << std::endl;
 	setColor(LogSystem::WHITE);
