@@ -10,17 +10,17 @@ namespace my
 	class MessageQueue
 	{
 	public:
-		MessageQueue(boost::recursive_mutex& mtx);
+		MessageQueue();
 		~MessageQueue();
 
-		void push(Message& msg);
-	    const Message& front();
+		void push(NetMessage& msg);
+	    const NetMessage& front();
 		void pop();
 		bool empty();
 
 	private:
-		std::queue<Message> m_MsgQueue;
-		boost::recursive_mutex& m_QueMutex;
+		std::queue<NetMessage> m_MsgQueue;
+		boost::recursive_mutex m_QueMutex;
 	};
 }
 
