@@ -2,6 +2,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread.hpp>
+#include <string.h>
 #include "funcHandler.h"
 #include "message.h"
 #include "log_system.h"

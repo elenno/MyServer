@@ -1,4 +1,5 @@
 #include "message.h"
+#include <string.h>
 
 my::NetMessage::NetMessage(std::string& json_str, int proto, int playerId, int netId)
 { 
