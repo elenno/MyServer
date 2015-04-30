@@ -6,7 +6,7 @@ std::string util::fileSystem::loadJsonFile(std::string dir)
 {
 	std::string content;
 	std::string line;
-	std::ifstream ifs(dir);
+	std::ifstream ifs(dir.c_str());
 	if (!ifs)
 	{
 		return content;
