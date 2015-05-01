@@ -4,6 +4,7 @@
 #include "tcpServer.h"
 #include "tcpConnection.h"
 #include "message.h"
+#include "common.h"
 #include <queue>
 #include <boost/thread/detail/singleton.hpp>
 

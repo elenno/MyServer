@@ -3,6 +3,7 @@
 
 #include "baseHandler.h"
 #include "message.h"
+#include "common.h"
 #include "tcpConnection.h"
 
 namespace my

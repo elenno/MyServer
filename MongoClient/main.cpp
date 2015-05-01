@@ -8,7 +8,7 @@ using namespace boost::asio;
 int main()
 {
 
-	std::vector<boost::shared_ptr<boost::thread>> m_ServiceThreads;
+	std::vector<boost::shared_ptr<boost::thread> > m_ServiceThreads;
 	
 	ip::tcp::endpoint end(ip::address::from_string("127.0.0.1"), 10085);
 	std::vector<my::TcpClient::ptr> vClient;

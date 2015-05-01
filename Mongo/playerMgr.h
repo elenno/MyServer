@@ -3,6 +3,7 @@
 
 #include "json/json.h"
 #include <boost/thread/detail/singleton.hpp>
+#include "common.h"
 
 #define playerMgr boost::detail::thread::singleton<my::PlayerMgr>::instance()
 

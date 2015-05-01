@@ -140,7 +140,8 @@ void my::GateServer::connect(std::string ipaddr, std::string port, ConnectionPtr
 
 void my::GateServer::sendToGameSvr(NetMessage& msg)
 {
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
+	std::string msgstr = msg.getMessage();
+	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
 	if(0 != m_pGameConn->sendMessage(tmp))
 	{
