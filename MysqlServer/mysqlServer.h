@@ -3,6 +3,9 @@
 
 #include "tcpServer.h"
 #include "tcpConnection.h"
+#include <boost/thread/detail/singleton.hpp>
+
+#define mysqlSvr boost::detail::thread::singleton<my::MysqlServer>::instance()
 
 namespace my
 {

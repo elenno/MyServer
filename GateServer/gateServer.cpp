@@ -151,7 +151,8 @@ void my::GateServer::sendToGameSvr(NetMessage& msg)
 
 void my::GateServer::sendToAccountSvr(NetMessage& msg)
 {
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
+	std::string msgstr = msg.getMessage();
+	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
 	LogD << "send msg to accountSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
 	if(0 != m_pAccountConn->sendMessage(tmp))
@@ -186,8 +187,8 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 		kickConnection(playerConn);
 		return;
 	}
-
-	NetMessage tmp(msg.getMessage(), msg.getProto(), msg.getPlayerId(), msg.getNetId());
+	std::string msgstr = msg.getMessage();
+	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
 	tmp.serialize();
 	if (0 != playerConn->sendMessage(tmp))
 	{
