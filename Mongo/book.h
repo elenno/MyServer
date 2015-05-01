@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include<boost/shared_ptr.hpp>
-#include<nedmalloc/nedmalloc.h>
+//#include<nedmalloc/nedmalloc.h>
 #include<json/json.h>
 using namespace std;
 

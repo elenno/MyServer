@@ -70,5 +70,4 @@ void my::MysqlServer::handle_accept(ConnectionPtr conn, boost::system::error_cod
 	{
 		LogE << "Caught Exception:  reason=" << e.what() << LogEnd;
 	}
-	
 }

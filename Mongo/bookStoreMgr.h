@@ -10,7 +10,7 @@
 
 #include <boost/thread/detail/singleton.hpp>
 #include "book.h"
-#include "nedmalloc/nedmalloc.h"
+//#include "nedmalloc/nedmalloc.h"
 #include "common.h"
 #include "json/json.h"
 

@@ -20,6 +20,10 @@ namespace my
 				PLAYER_LOGIN_REQ,
 				PLAYER_LOGIN_RSP,
 			ACCOUNT_END = 3000,
+
+			/*************************************** MysqlSvr ***********************************/
+			MYSQL_BEGIN = 3001,
+			MYSQL_END = 4000,
 			/*************************************** GameSvr **************************************/
 			GAME_BEGIN = 10001,
 			    PLAYER_CREATE_ROLE_REQ,

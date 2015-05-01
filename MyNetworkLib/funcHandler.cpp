@@ -2,6 +2,7 @@
 #include "message.h"
 #include "helpFunctions.h"
 #include "log_system.h"
+#include <json/json.h>
 
 my::FuncHandler::FuncHandler()
 {

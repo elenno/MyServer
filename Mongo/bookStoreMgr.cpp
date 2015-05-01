@@ -146,7 +146,7 @@ Json::Value my::BookStoreMgr::findBook(int bookId)
 {
 	Json::Value key;
 	key[db::Book::bookId] = bookId;
-	Json::Value ret = mongoMgr.findJson(db::Book::colName, key.toStyledString());
+	Json::Value ret = mongoMgr.findJson(db::Book::colName, key);
 	return ret;
 }
 
