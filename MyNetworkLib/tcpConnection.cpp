@@ -85,7 +85,8 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 		LogD << "Receive Message: length=" << bytes_transferred << LogEnd;
 		//解包
 		NetMessage reqMsg;
-		if (!reqMsg.deserialize(m_ReadBuffer, bytes_transferred))
+		if (!reqMsg.deserialize(m_ReadBuffer, bytes_transferred)) //可能读到大于一条的消息，可能需要连续解包（也可能由于消息到达速度太快，上一个async_read_some未来得及调用
+			                                                      //handler，下一条消息就到了, 直接保存到m_ReadBuffer可能覆盖了上条消息！)
 		{
 			//解包错误
 			LogW << "Deserialize Message Error" << LogEnd;
