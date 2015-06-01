@@ -29,7 +29,7 @@ namespace my
 		FuncHandler();
 		~FuncHandler();
 
-		void registFuncHandler(int handlerId, int responseId, HandlerFunc handler);
+		void registFuncHandler(int requestId, int responseId, HandlerFunc handler);
 		bool runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg);
 
 	private:

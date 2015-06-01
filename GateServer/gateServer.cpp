@@ -21,6 +21,7 @@ my::GateServer::~GateServer()
 
 void my::GateServer::init()
 {
+	boost::shared_ptr<TcpServer> serverPtr(this); //make sure that shared_from_this() can run perfectly ok!
 	Json::Value gateConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (gateConf == Json::nullValue)
 	{
@@ -40,7 +41,7 @@ void my::GateServer::init()
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 
 	m_GateHandler = boost::shared_ptr<GateHandler>(new GateHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler, shared_from_this()));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 
 	connectToGameSvr(gameSvrIp, gameSvrPort);
@@ -54,7 +55,7 @@ void my::GateServer::init()
 void my::GateServer::connectToGameSvr(std::string ipaddr, int port)
 {
 	std::string portStr = boost::lexical_cast<std::string, int>(port);
-	m_pGameConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
+	m_pGameConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler, shared_from_this()));
 	m_pGameConn->setNetId(my::server_id::GAME_SVR);
 	connect(ipaddr, portStr, m_pGameConn);
 }
@@ -62,7 +63,7 @@ void my::GateServer::connectToGameSvr(std::string ipaddr, int port)
 void my::GateServer::connectToAccountSvr(std::string ipaddr, int port)
 {
 	std::string portStr = boost::lexical_cast<std::string, int>(port);
-	m_pAccountConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
+	m_pAccountConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler, shared_from_this()));
 	m_pAccountConn->setNetId(my::server_id::ACCOUNT_SVR);
 	connect(ipaddr, portStr, m_pAccountConn);
 }
@@ -102,7 +103,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 	{
 		LogE << err.message() << LogEnd;
 		conn->getSocket().close();
-		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
+		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler, shared_from_this()));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 	}
 	else
@@ -119,7 +120,7 @@ void my::GateServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 		m_nNetIdHolder = (m_nNetIdHolder + 1) % MAX_NET_ID;
 		m_nConnCount++;
 			
-		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler));
+		ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), m_GateHandler, shared_from_this()));
 		m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GateServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 	}
 }
@@ -142,10 +143,12 @@ void my::GateServer::sendToGameSvr(NetMessage& msg)
 {
 	std::string msgstr = msg.getMessage();
 	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
-	tmp.serialize();
-	if(0 != m_pGameConn->sendMessage(tmp))
+	if (tmp.serialize())
 	{
-		LogW << "send msg to gameSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+		if(0 != m_pGameConn->sendMessage(tmp))
+		{
+			LogW << "send msg to gameSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+		}
 	}
 }
 
@@ -153,12 +156,14 @@ void my::GateServer::sendToAccountSvr(NetMessage& msg)
 {
 	std::string msgstr = msg.getMessage();
 	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
-	tmp.serialize();
-	LogD << "send msg to accountSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
-	if(0 != m_pAccountConn->sendMessage(tmp))
+	if (tmp.serialize())
 	{
-		LogW << "send msg to accountSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
-	}
+		LogD << "send msg to accountSvr, len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+		if(0 != m_pAccountConn->sendMessage(tmp))
+		{
+			LogW << "send msg to accountSvr FAILED!!! len=" << tmp.getLen() << " proto=" << tmp.getProto() << " msg=" << tmp.getMessage() << LogEnd;
+		}
+	}	
 }
 
 void my::GateServer::sendToPlayer(NetMessage& msg)
@@ -189,10 +194,12 @@ void my::GateServer::sendToPlayer(NetMessage& msg)
 	}
 	std::string msgstr = msg.getMessage();
 	NetMessage tmp(msgstr, msg.getProto(), msg.getPlayerId(), msg.getNetId());
-	tmp.serialize();
-	if (0 != playerConn->sendMessage(tmp))
+	if (tmp.serialize())
 	{
-		LogW << "Send Msg To Player Failed, playerId=" << playerId << LogEnd;
+		if (0 != playerConn->sendMessage(tmp))
+		{
+			LogW << "Send Msg To Player Failed, playerId=" << playerId << LogEnd;
+		}
 	}
 }
 
@@ -211,7 +218,7 @@ void my::GateServer::onPlayerLogin(int playerId, int netId)
 			//玩家已在线，无需再登陆
 			return;
 		}
-		kickConnection(conn);
+		//kickConnection(conn);
 	}
     it = m_ConnMap.find(netId);
 	if (it == m_ConnMap.end())
@@ -322,4 +329,10 @@ void my::GateServer::checkServerAlive(boost::system_time time)
 boost::system_time my::GateServer::getSystemTime()
 {
 	return m_SystemTime;
+}
+
+void my::GateServer::handle_disconnect(ConnectionPtr conn)
+{
+	//kick conn
+	LogD << "this is gate server!" << LogEnd;
 }

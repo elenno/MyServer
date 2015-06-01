@@ -6,7 +6,7 @@
 
 my::TcpServer::TcpServer()
 {
-	init();
+
 }
 
 my::TcpServer::~TcpServer()
@@ -16,10 +16,11 @@ my::TcpServer::~TcpServer()
 
 void my::TcpServer::init()
 {
+	boost::shared_ptr<TcpServer> serverPtr(this); //make sure that shared_from_this() can run perfectly ok!
 	m_pEndpoint = EndpointPtr(new boost::asio::ip::tcp::endpoint());
 	m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), *m_pEndpoint));
 	BasePtr msgHandler(new MessageHandler());
-	ConnectionPtr conn(new TcpConnection(core.getService(), msgHandler));
+	ConnectionPtr conn(new TcpConnection(core.getService(), msgHandler, shared_from_this()));
 	m_pAcceptor->async_accept(conn->getSocket(), boost::bind(&TcpServer::handle_accept, this, conn, boost::asio::placeholders::error));
 }
 
@@ -41,11 +42,16 @@ void my::TcpServer::handle_accept(ConnectionPtr conn, boost::system::error_code 
 	{
 		std::cout << conn->getSocket().remote_endpoint().address() << " " << conn->getSocket().remote_endpoint().port() << std::endl;
 		BasePtr msgHandler(new MessageHandler());
-		conn.reset(new TcpConnection(core.getService(), msgHandler));
+		conn.reset(new TcpConnection(core.getService(), msgHandler, shared_from_this()));
 		m_pAcceptor->async_accept(conn->getSocket(), boost::bind(&TcpServer::handle_accept, this, conn, boost::asio::placeholders::error));
 	}
 	catch(std::exception& e)
 	{
 		LogE << e.what() << LogEnd;
 	}
+}
+
+void my::TcpServer::handle_disconnect(ConnectionPtr conn)
+{
+
 }

@@ -18,11 +18,12 @@ namespace my
 	
 	public:
 		MysqlServer();
-		~MysqlServer();
+		virtual ~MysqlServer();
         
 		void init();
 		void asyncAccept();
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
+		virtual void handle_disconnect(ConnectionPtr conn);
 
 	private:
 		Json::Value m_SvrConf;

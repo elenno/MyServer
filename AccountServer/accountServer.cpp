@@ -17,6 +17,7 @@ my::AccountServer::~AccountServer()
 
 void my::AccountServer::init()
 {
+	boost::shared_ptr<TcpServer> serverPtr(this); //make sure that shared_from_this() can run perfectly ok!
 	m_SvrConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (m_SvrConf == Json::nullValue)
 	{
@@ -48,6 +49,7 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 	}
 	else
 	{
+		LogD << "Accepted Gate Connection!!" << LogEnd;
 		m_GateConn = conn;
 		m_GateConn->setNetId(server_id::GATE_SVR);
 		static ip::tcp::no_delay option(true);
@@ -60,6 +62,11 @@ void my::AccountServer::handle_accept(ConnectionPtr conn, boost::system::error_c
 void my::AccountServer::asyncAccept()
 {
 	AccountHandler::ptr accountHandler = boost::shared_ptr<AccountHandler>(new AccountHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), accountHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), accountHandler, shared_from_this()));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&AccountServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
+}
+
+void my::AccountServer::handle_disconnect(ConnectionPtr conn)
+{
+	LogD << "this is account server!" << LogEnd;
 }

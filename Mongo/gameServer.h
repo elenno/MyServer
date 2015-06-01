@@ -22,9 +22,10 @@ namespace my
 
 	public:
 		GameServer();
-		~GameServer();
+		virtual ~GameServer();
 
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
+		virtual void handle_disconnect(ConnectionPtr conn);
 		bool init();
 		void asyncAccept();
 		void update();

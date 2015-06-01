@@ -8,7 +8,8 @@ my::NetMessage::NetMessage(std::string& json_str, int proto, int playerId, int n
 	m_nPlayerId = playerId;
 	m_nNetId = netId;
 	m_nLen = 0;
-	memset(m_szStream, 0, sizeof(m_szStream));
+	m_nContentLength = json_str.length();
+	m_szStream = NULL;
 }
 
 my::NetMessage::NetMessage()
@@ -16,12 +17,14 @@ my::NetMessage::NetMessage()
 	m_nProto = 0;
 	m_nLen = 0;
 	m_nPlayerId = 0;
-	memset(m_szStream, 0, sizeof(m_szStream));
+	m_nNetId = 0;
+	m_nContentLength = 0;
+	m_szStream = NULL;
 }
 
 my::NetMessage::~NetMessage()
 {
-
+	delete[] m_szStream;
 }
 
 int my::NetMessage::getNetId()
@@ -67,6 +70,7 @@ int my::NetMessage::getPlayerId()
 void my::NetMessage::setMessage(const std::string& msg)
 {
 	m_szMessage = msg;
+	m_nContentLength = msg.length();
 }
 
 std::string my::NetMessage::getMessage()
@@ -74,13 +78,15 @@ std::string my::NetMessage::getMessage()
 	return m_szMessage;
 }
 
-void my::NetMessage::serialize()
+bool my::NetMessage::serialize()
 {
-	m_nLen = 0;
-	if (m_nLen + sizeof(m_nProto) + sizeof(m_nPlayerId) + sizeof(m_nNetId) + m_szMessage.length() >= sizeof(m_szStream))
+	if (MSG_HEAD + m_szMessage.length() >= MSG_MAXIMUM)
 	{
-		return;
+		return false;
 	}
+	m_szStream = new char[MSG_HEAD + m_szMessage.length()];
+
+	m_nLen = 0;
 
 	memcpy(m_szStream + m_nLen, &m_nProto, sizeof(m_nProto));
 	m_nLen += sizeof(m_nProto);
@@ -91,13 +97,18 @@ void my::NetMessage::serialize()
 	memcpy(m_szStream + m_nLen, &m_nNetId, sizeof(m_nNetId));
 	m_nLen += sizeof(m_nNetId);
 
+	memcpy(m_szStream + m_nLen, &m_nContentLength, sizeof(m_nContentLength));
+	m_nLen += sizeof(m_nContentLength);
+
 	memcpy(m_szStream + m_nLen, m_szMessage.data(), m_szMessage.length());
 	m_nLen += m_szMessage.length();
+
+	return true;
 }
 
-bool my::NetMessage::deserialize(const char* buff, int size)
+int my::NetMessage::deserialize(const char* buff, int size)
 {
-	if (size >= sizeof(m_szStream))
+	if (size >= MSG_MAXIMUM || size < MSG_HEAD)
 	{
 		return false;
 	}
@@ -115,7 +126,18 @@ bool my::NetMessage::deserialize(const char* buff, int size)
 	m_nLen += sizeof(m_nNetId);
 	size -= sizeof(m_nNetId);
 
-	m_szMessage.assign(buff + m_nLen, size);
-	m_nLen += size;
-	return true;
+	memcpy(&m_nContentLength, buff + m_nLen, sizeof(m_nContentLength));
+	m_nLen += sizeof(m_nContentLength);
+	size -= sizeof(m_nContentLength);
+
+	if (size >= m_nContentLength && m_nContentLength >= 0)
+	{
+		m_szMessage.assign(buff + m_nLen, m_nContentLength);
+		m_nLen += m_nContentLength;
+		return m_nLen;
+	}
+	else
+	{
+		return 0;
+	}
 }

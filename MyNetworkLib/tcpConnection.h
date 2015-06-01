@@ -14,11 +14,13 @@ using namespace boost::asio;
 
 namespace my
 {
+	class TcpServer;
 	class TcpConnection : public boost::enable_shared_from_this<TcpConnection>
 	{
 	public:
+		typedef boost::shared_ptr<TcpServer> ServerPtr;
 		typedef boost::shared_ptr<BaseHandler> BasePtr;
-		TcpConnection(io_service& ios, BasePtr handler);
+		TcpConnection(io_service& ios, BasePtr handlerPtr, ServerPtr serverPtr);
 		~TcpConnection();
 
 		ip::tcp::socket& getSocket();
@@ -52,6 +54,7 @@ namespace my
 		BasePtr m_pHandler;
 		boost::system_time m_HeartBeat;
 		int m_nPlayerId;
+		ServerPtr m_pServer;
 	};
 }
 

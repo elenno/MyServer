@@ -15,6 +15,8 @@ void my::MessageHandler::onRecv(ConnectionPtr conn, NetMessage& req)
 {
 	NetMessage rsp;
 	funcHandlerMgr.runFuncHandler(req, rsp);
-	rsp.serialize();
-	conn->sendMessage(rsp);
+	if (rsp.serialize())
+	{
+		conn->sendMessage(rsp);
+	}
 }

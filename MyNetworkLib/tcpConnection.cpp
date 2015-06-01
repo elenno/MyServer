@@ -6,15 +6,17 @@
 #include "funcHandler.h"
 #include "message.h"
 #include "log_system.h"
+#include "core.h"
 
 using namespace boost::asio;
 
-my::TcpConnection::TcpConnection(io_service& ios, BasePtr handler) : m_Socket(ios), m_pHandler(handler)
+my::TcpConnection::TcpConnection(io_service& ios, BasePtr handlerPtr, ServerPtr serverPtr) : m_Socket(ios), m_pHandler(handlerPtr), m_pServer(serverPtr)
 {
 	memset(m_WriteBuffer, 0, sizeof(m_WriteBuffer));
 	memset(m_ReadBuffer, 0, sizeof(m_ReadBuffer));
 	m_nWriteLen = 0;
 	m_bWriteInProgress = false;
+	m_bReadInProgress = false;
 	m_HeartBeat = boost::get_system_time();
 	m_nPlayerId = 0;
 }
@@ -38,35 +40,44 @@ void my::TcpConnection::start()
 
 void my::TcpConnection::handle_write(const boost::system::error_code& err, size_t bytes_transferred)
 {
-	boost::mutex::scoped_lock lock(m_WriteMutex);
-	if (err)
-	{	
-		LogW << "Write Error! Close Socket! netId=" << m_nNetId << err.message() << LogEnd;
-		if (m_Socket.is_open())
-		{
-			m_Socket.close();
-		}
-		m_bWriteInProgress = false;
-		m_nWriteLen = 0;
-		return;
-	}
 	m_bWriteInProgress = false;
-	try{
-		LogD << "Write Len = " << m_nWriteLen << LogEnd;
-		size_t wlen = m_Socket.write_some(buffer(m_WriteBuffer, m_nWriteLen));
-		m_nWriteLen = 0;
-		if (wlen == 0)
-		{
-			//出错
-			LogW << "Error wlen! wlen = " << wlen << LogEnd;
-			return;
-		}	
-	}catch(std::exception& e)
+	if (!err)
 	{
-		LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+		boost::mutex::scoped_lock lock(m_WriteMutex);
+		try{
+			LogD << "Write Len = " << m_nWriteLen << LogEnd;
+			std::size_t len = 0;
+			boost::system::error_code errrr;
+			do 
+			{
+				size_t wlen = m_Socket.write_some(buffer(m_WriteBuffer + len, m_nWriteLen), errrr);
+				if (wlen == 0)
+				{
+					LogE << "wlen == 0, reason=" << errrr.message() << " net_id=" << getNetId() << LogEnd;
+					// copy unwritten data to top
+					memmove(m_WriteBuffer, m_WriteBuffer + len, m_nWriteLen);
+					break;
+				}
+				len += wlen;
+				m_nWriteLen -= wlen;
+			} while (m_nWriteLen > 0);
+			m_nWriteLen = 0;
+		}catch(std::exception& e)
+		{
+			LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+		}
+	}
+	else
+	{
+		if (err != boost::asio::error::eof)
+		{	
+			LogE << "Write Error! netId=" << m_nNetId << " reason=" << err.message() << LogEnd;
+			m_nWriteLen = 0;
+			core.getService().post(boost::bind(&TcpServer::handle_disconnect, m_pServer, shared_from_this()));
+			return;
+		}
 	}
 }
-
 void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t bytes_transferred)
 {
 	boost::mutex::scoped_lock lock(m_ReadMutex);
@@ -80,44 +91,52 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 		m_bReadInProgress = false;
 		return;
 	}
+	LogD << "Receive Message: length=" << bytes_transferred << LogEnd;
 	m_bReadInProgress = false;
-	try{
-		LogD << "Receive Message: length=" << bytes_transferred << LogEnd;
-		//解包
+	//try{
+	int total_len = bytes_transferred;
+	int offset = 0;
+	while(total_len > 0)
+	{
 		NetMessage reqMsg;
-		if (!reqMsg.deserialize(m_ReadBuffer, bytes_transferred)) //可能读到大于一条的消息，可能需要连续解包（也可能由于消息到达速度太快，上一个async_read_some未来得及调用
-			                                                      //handler，下一条消息就到了, 直接保存到m_ReadBuffer可能覆盖了上条消息！)
+		int res = reqMsg.deserialize(m_ReadBuffer + offset, total_len);
+		if (0 == res)
 		{
 			//解包错误
 			LogW << "Deserialize Message Error" << LogEnd;
 			//可以考虑踢掉客户端
+			break;
 		}
 		else
 		{
+			total_len -= res;
+			offset += res;
 			LogD << "Receive Message: netId=" << getNetId() << "  length=" << reqMsg.getLen() << "  content=" << reqMsg.getMessage() << LogEnd;
 			m_pHandler->onRecv(shared_from_this(), reqMsg);
 		}
-	}catch (std::exception& e)
-	{
-		LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
 	}
+	//}
+	//catch (std::exception& e)
+	//{
+	//	LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+	//}
 	post_read();
 }
 
 void my::TcpConnection::post_write()
 {
 	try{
-	    if (!m_Socket.is_open() || m_bWriteInProgress ||  0 == m_nWriteLen)
-	    {
-		    LogD << "socket is closed || write in progress || data length is 0" << LogEnd;
-		    return;
-	    }
-	    m_bWriteInProgress = true;
-	    m_Socket.async_write_some(boost::asio::null_buffers(), boost::bind(&TcpConnection::handle_write, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
-    }catch (std::exception& e)
-    {
-	    LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
-    }
+		if (!m_Socket.is_open() || m_bWriteInProgress ||  0 == m_nWriteLen)
+		{
+			LogD << "socket is closed || write in progress || data length is 0" << LogEnd;
+			return;
+		}
+		m_bWriteInProgress = true;
+		m_Socket.async_write_some(boost::asio::null_buffers(), boost::bind(&TcpConnection::handle_write, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+	}catch (std::exception& e)
+	{
+		LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+	}
 }
 
 void my::TcpConnection::post_read()

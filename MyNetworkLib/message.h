@@ -4,6 +4,8 @@
 #include "json/json.h"
 #include <string>
 
+#define MSG_HEAD 16
+#define MSG_MAXIMUM 8192
 namespace my
 {
 	class NetMessage
@@ -22,8 +24,8 @@ namespace my
 		int getPlayerId();
 		void setNetId(int netId);
 		int getNetId();
-		void serialize();
-		bool deserialize(const char* buff, int size);
+		bool serialize();
+		int deserialize(const char* buff, int size);
 		const char* getStream();
 
 	private:
@@ -32,7 +34,8 @@ namespace my
 		int m_nProto;
 		int m_nNetId;
 		std::string m_szMessage;
-		char m_szStream[8192];
+		char* m_szStream;
+		int m_nContentLength; //jsonµÄ³¤¶È
 	};
 }
 

@@ -3,6 +3,7 @@
 #include "fileSystem.h"
 #include "log_system.h"
 #include "stringDef.h"
+#include "valueDef.h"
 #include "playerMgr.h"
 #include "helpFunctions.h"
 #include "funcHandler.h"
@@ -37,6 +38,7 @@ void my::GameServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 	{
 		LogD << "Accepted Gate Connection!!" << LogEnd;
 		m_GateConn = conn;
+		m_GateConn->setNetId(server_id::GATE_SVR);
 		ip::tcp::no_delay option(true);
 		m_GateConn->getSocket().set_option(option);
 		m_GateConn->start();
@@ -46,6 +48,7 @@ void my::GameServer::handle_accept(ConnectionPtr conn, boost::system::error_code
 
 bool my::GameServer::init()
 {
+	boost::shared_ptr<TcpServer> serverPtr(this); //make sure that shared_from_this() can run perfectly ok!
 	Json::Value gameConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (gameConf == Json::nullValue)
 	{
@@ -78,7 +81,7 @@ bool my::GameServer::init()
 void my::GameServer::asyncAccept()
 {
 	GameHandler::ptr gameHandler = boost::shared_ptr<GameHandler>(new GameHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), gameHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), gameHandler, shared_from_this()));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&GameServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 }
 
@@ -112,10 +115,17 @@ void my::GameServer::runMessage()
 		NetMessage& req = m_MsgQueue.front();
 		NetMessage rsp;
 		funcHandlerMgr.runFuncHandler(req, rsp);
-		rsp.serialize();
-		//可根据msg的protoId，找到对应的返回的conn，暂用gateConn
-		m_GateConn->sendMessage(rsp);
-
+		if (rsp.serialize())
+		{
+			//可根据msg的protoId，找到对应的返回的conn，暂用gateConn
+			m_GateConn->sendMessage(rsp);
+		}
 		m_MsgQueue.pop();
 	}
+}
+
+void my::GameServer::handle_disconnect(ConnectionPtr conn)
+{
+	//save player's data, disconnect him
+	LogD << "this is game server!" << LogEnd;
 }

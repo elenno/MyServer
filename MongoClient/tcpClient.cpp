@@ -75,13 +75,19 @@ void my::TcpClient::handle_connect(const boost::system::error_code& err)
 
 void my::TcpClient::post_write()
 {
-	//just for test
-	if (!m_Socket.is_open())
+	try
 	{
-		LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
-		post_connect();
-		return;
+		if (!m_Socket.is_open())
+		{
+			LogW << "socket closed! reconnect! user=" << m_Robot.getUserName() << LogEnd;
+			post_connect();
+			return;
+		}
+	}catch(std::exception& e)
+	{
+		LogE << "Caught Exception: user=" << m_Robot.getUserName() << "  reason=" << e.what() << LogEnd;
 	}
+	
 	
 	Json::Value reqJson;
 	int step = -1;
@@ -123,22 +129,23 @@ void my::TcpClient::post_write()
 	//tmp += "\r\n";
 	std::string tmp = util::HelpFunctions::tighten(reqJson.toStyledString());
 	NetMessage msg(tmp, step, playerId, 0);
-	msg.serialize();
-	LogD << "send msg: protoId=" << msg.getProto() << " content=" << msg.getMessage() << " msgLen=" << msg.getLen() << LogEnd;
-	m_nWriteLen = 0;
-	memcpy(m_WriteBuff, msg.getStream(), msg.getLen());
-	m_nWriteLen += msg.getLen();
-//	memcpy(m_WriteBuff, tmp.c_str(), tmp.length());
-//	m_nWriteLen += tmp.length();
-	
-	try {
-		m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
-			boost::asio::placeholders::error,
-			boost::asio::placeholders::bytes_transferred));
-	}catch (std::exception& e)
+	if (msg.serialize())
 	{
-		LogE << "Caught Exception:  user=" << m_Robot.getUserName() << "  reason=" <<  e.what() << LogEnd;
+		LogD << "send msg: protoId=" << msg.getProto() << " content=" << msg.getMessage() << " msgLen=" << msg.getLen() << LogEnd;
+		m_nWriteLen = 0;
+		memcpy(m_WriteBuff + m_nWriteLen, msg.getStream(), msg.getLen());
+		m_nWriteLen += msg.getLen();
+		try {
+			m_Socket.async_write_some(buffer(m_WriteBuff, m_nWriteLen), boost::bind(&TcpClient::handle_write, shared_from_this(),
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred));
+		}
+		catch (std::exception& e)
+		{
+			LogE << "Caught Exception:  user=" << m_Robot.getUserName() << "  reason=" <<  e.what() << LogEnd;
+		}
 	}
+	
 }
 
 void my::TcpClient::post_read()

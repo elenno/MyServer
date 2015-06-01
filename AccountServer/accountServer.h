@@ -25,10 +25,11 @@ namespace my
 
 	public:
 		AccountServer();
-		~AccountServer();
+		virtual ~AccountServer();
 
 		void init();
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
+		virtual void handle_disconnect(ConnectionPtr conn);
 		void asyncAccept();
 
 	private:

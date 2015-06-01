@@ -16,10 +16,10 @@ my::FuncHandler::~FuncHandler()
 	m_ProtoMap.clear();
 }
 
-void my::FuncHandler::registFuncHandler(int handlerId, int responseId, HandlerFunc handler)
+void my::FuncHandler::registFuncHandler(int requestId, int responseId, HandlerFunc handler)
 {
-	m_HandlerMap.insert(std::make_pair<int, HandlerFunc>(handlerId, handler));
-    m_ProtoMap.insert(std::make_pair<int, int>(handlerId, responseId));
+	m_HandlerMap.insert(HandlerMap::value_type(requestId, handler));
+    m_ProtoMap.insert(ProtoMap::value_type(requestId, responseId));
 }
 
 bool my::FuncHandler::runFuncHandler(NetMessage& reqMsg, NetMessage& rspMsg)

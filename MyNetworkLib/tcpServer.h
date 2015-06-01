@@ -5,7 +5,7 @@
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
-
+#include <boost/enable_shared_from_this.hpp>
 #include "tcpConnection.h"
 #include "baseHandler.h"
 
@@ -15,7 +15,7 @@ namespace my
 {
 	class BaseHandler;
 	class TcpConnection;
-	class TcpServer
+	class TcpServer : public boost::enable_shared_from_this<TcpServer>
 	{
 	public:
 		typedef boost::shared_ptr<BaseHandler> BasePtr;
@@ -24,11 +24,12 @@ namespace my
 		typedef boost::shared_ptr<boost::asio::ip::tcp::endpoint> EndpointPtr;
 
 		TcpServer();
-		~TcpServer();
+		virtual ~TcpServer();
 
 		void run();
 		void init();
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err);
+		virtual void handle_disconnect(ConnectionPtr conn);
 
 	protected:
 		boost::recursive_mutex mtx;

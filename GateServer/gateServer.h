@@ -28,7 +28,7 @@ namespace my
 
 	public:
 		GateServer();
-		~GateServer();
+		virtual ~GateServer();
 
 		void connectToGameSvr(std::string ipaddr, int port);
 		void connectToAccountSvr(std::string ipaddr, int port);
@@ -41,6 +41,7 @@ namespace my
 
 		void handle_accept(ConnectionPtr conn, boost::system::error_code err); // ÷ÿ–¥handle_accept
 		void handle_connect(ConnectionPtr conn, boost::system::error_code err);
+		virtual void handle_disconnect(ConnectionPtr conn);
 
 		void onPlayerLogin(int playerId, int netId);	
 		void update();

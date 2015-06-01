@@ -18,6 +18,7 @@ my::MysqlServer::~MysqlServer()
 
 void my::MysqlServer::init()
 {
+	boost::shared_ptr<TcpServer> serverPtr(this); //make sure that shared_from_this() can run perfectly ok!
 	m_SvrConf = util::fileSystem::loadJsonFileEval(jsonconf::server_config);
 	if (m_SvrConf == Json::nullValue)
 	{
@@ -35,7 +36,7 @@ void my::MysqlServer::init()
 void my::MysqlServer::asyncAccept()
 {
 	MysqlHandler::ptr mysqlHandler = boost::shared_ptr<MysqlHandler>(new MysqlHandler());
-	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), mysqlHandler));
+	ConnectionPtr nextConn = boost::shared_ptr<TcpConnection>(new TcpConnection(core.getService(), mysqlHandler, shared_from_this()));
 	m_pAcceptor->async_accept(nextConn->getSocket(), boost::bind(&MysqlServer::handle_accept, this, nextConn, boost::asio::placeholders::error));
 }
 
@@ -70,4 +71,9 @@ void my::MysqlServer::handle_accept(ConnectionPtr conn, boost::system::error_cod
 	{
 		LogE << "Caught Exception:  reason=" << e.what() << LogEnd;
 	}
+}
+
+void my::MysqlServer::handle_disconnect(ConnectionPtr conn)
+{
+	LogD << "this is mysql server!" << LogEnd;
 }
