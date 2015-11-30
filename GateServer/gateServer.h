@@ -10,6 +10,8 @@
 #include "tcpServer.h"
 #include "tcpConnection.h"
 #include "gateHandler.h"
+#include "http_server.h"
+#include "connection.h"
 
 using namespace boost::asio;
 #define gateSvr boost::detail::thread::singleton<my::GateServer>::instance()
@@ -25,6 +27,7 @@ namespace my
 		typedef std::map<int, ConnectionPtr> ConnectionMap;
 		typedef boost::shared_ptr<GateServer> ptr;
 		typedef boost::shared_ptr<boost::asio::ip::tcp::acceptor> AcceptorPtr;
+		typedef boost::shared_ptr<http::HttpServer> HttpServerPtr;
 
 	public:
 		GateServer();
@@ -46,6 +49,7 @@ namespace my
 		void onPlayerLogin(int playerId, int netId);	
 		void update();
 		boost::system_time getSystemTime();
+		void on_http_req(http::Connection* connPtr, Json::Value& reqJson);
 
 	private:
 		void connect(std::string ipaddr, std::string port, ConnectionPtr conn);
@@ -65,6 +69,7 @@ namespace my
 		ConnectionPtr m_pAccountConn; //Á¬½ÓAcountSvr
 		boost::system_time m_SystemTime;
 		GateHandler::ptr m_GateHandler;
+		HttpServerPtr m_HttpServerPtr;
 	};
 }
 

@@ -28,6 +28,12 @@ void my::GateServer::init()
 		LogW << "Error init GateServer, null gateConf" << LogEnd;
 		return;
 	}
+	//初始化httpSvr
+	{
+		m_HttpServerPtr = HttpServerPtr(new http::HttpServer());
+		m_HttpServerPtr->init(gateConf);
+		m_HttpServerPtr->run();
+	}
 	m_GateConf = gateConf;
 	int	port = gateConf["gateSvrPort"].asInt();
 	std::string gameSvrIp = gateConf["gameSvrIp"].asString();
@@ -335,4 +341,19 @@ void my::GateServer::handle_disconnect(ConnectionPtr conn)
 {
 	//kick conn
 	LogD << "this is gate server!" << LogEnd;
+}
+
+void my::GateServer::on_http_req(http::Connection* connPtr, Json::Value& reqJson)
+{
+	//proto 和 player_id可夹带在header中带过来   
+	//如何判断是gm后台的请求还是玩家请求！remote_ip?加密？session_id
+	NetMessage msg;
+	msg.setProto(reqJson["proto"].asInt());
+	msg.setNetId(connPtr->get_connection_id());
+	msg.setPlayerId(reqJson["player_id"].asInt());
+	reqJson.removeMember("proto");
+	reqJson.removeMember("player_id");
+	std::string msgStr = reqJson.toStyledString();
+	msg.setMessage(msgStr);
+	m_pGameConn->sendMessage(msg);
 }

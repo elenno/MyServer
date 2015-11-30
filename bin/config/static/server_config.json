@@ -6,5 +6,8 @@
 	"accountSvrIp" : "127.0.0.1",
 	"accountSvrPort" : 10084,
 	"mysqlSvrIp" : "127.0.0.1",
-	"mysqlSvrPort" : 10083
+	"mysqlSvrPort" : 10083,
+	"httpSvrIp" : "127.0.0.1",
+	"httpSvrPort" : 10082,
+	"httpDocRoot" : "../../www/"
 }

@@ -22,7 +22,7 @@ namespace my
 			virtual ~HttpServer();
 
 			void run();
-			void init();
+			void init(const Json::Value& gateConfig);
 			void stop();
 
 		private:

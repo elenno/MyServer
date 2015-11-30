@@ -18,9 +18,9 @@ namespace my
 
 		void ConnectionManager::start( Connection::ptr conn )
 		{
-			conn->m_nConnId = getNextConnId();
-			m_ConnectionMap[conn->m_nConnId] = conn;
-			m_ConnectionMap[conn->m_nConnId]->start();
+			conn->set_connection_id(getNextConnId());
+			m_ConnectionMap[conn->get_connection_id()] = conn;
+			m_ConnectionMap[conn->get_connection_id()]->start();
 		}
 
 		void ConnectionManager::stop(int conn_id)

@@ -5,12 +5,6 @@
 
 int main()
 {
-	boost::asio::io_service io_service;
-	boost::asio::ip::tcp::endpoint en(boost::asio::ip::address::from_string("127.0.0.1"), 10085);
-	//TcpServer server(io_service, en);
-	//server.run();
-
-	gateSvr;
 	gateSvr.init();
 	gateSvr.run();
 	while(1)

@@ -117,7 +117,15 @@ void my::TcpConnection::handle_read(const boost::system::error_code& err, size_t
 					m_pHandler->onRecv(shared_from_this(), reqMsg);
 				}
 			}
-		}	
+		}
+		else if (errrr == boost::asio::error::would_block || errrr == boost::asio::error::try_again)
+		{
+			//add block times
+		}
+		else
+		{
+			//kick
+		}
 	}
 	catch (std::exception& e)
 	{

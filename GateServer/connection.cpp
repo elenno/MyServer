@@ -3,6 +3,10 @@
 #include <nedmalloc/nedmalloc.h>
 #include "http_common.hpp"
 #include <boost/lexical_cast.hpp>
+#include "log_system.h"
+#include <boost/logic/tribool.hpp>
+#include<boost/tuple/tuple.hpp>
+#include "gateServer.h"
 
 namespace my
 {
@@ -51,13 +55,14 @@ namespace my
 			{
 				if (!m_Socket.is_open())
 				{
-					//LogD << "socket is closed" << LogEnd;
+					//kick connection
 					return;
 				}
 				m_Socket.async_read_some(boost::asio::buffer(m_ReadBuffer), boost::bind(&Connection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 			}catch (std::exception& e)
 			{
-				//LogE << "Caught Exception: netId=" << m_nNetId << "  reason=" << e.what() << LogEnd;
+				//kick connection
+				LogE << "Caught Exception: " << "  reason=" << e.what() << LogEnd;
 			}
 		}
 
@@ -85,6 +90,69 @@ namespace my
 		void Connection::handle_read(const boost::system::error_code& e, std::size_t bytes_transferred)
 		{
 			//parse  and  make it a Json::Value then transport it to gate, let gate deal with it
+			m_bReadInProgress = false;
+			if (!e)
+			{
+				//mutex lock
+				boost::tribool result;
+				boost::tie(result, boost::tuples::ignore) = m_RequestParser.parse(
+					m_Request, m_ReadBuffer.data(), m_ReadBuffer.data() + bytes_transferred);
+				if (result)
+				{
+					//request_handler_.handle_request(request_, reply_);
+					//boost::asio::async_write(m_Socket, m_Reply.to_buffers(),
+					//	boost::bind(&Connection::handle_write, shared_from_this(),
+					//	boost::asio::placeholders::error));
+
+					if (!is_uri_header_correct(m_Request.uri))
+					{
+						m_Reply = reply::stock_reply(reply::bad_request);
+						boost::asio::async_write(m_Socket, m_Reply.to_buffers(),
+							boost::bind(&Connection::handle_write, shared_from_this(),
+							boost::asio::placeholders::error));
+						return;
+					}
+
+					Json::Value jreq;
+					int ret = 0;
+					if (m_Request.method == "GET")
+					{
+						ret = m_RequestParser.parse_content(GET_METHOD, m_Request.uri, jreq);
+					}
+					else
+					{
+						ret = m_RequestParser.parse_content(POST_METHOD,  m_Request.content, jreq);
+					}
+					if (ret != 0)
+					{
+						m_Reply = reply::stock_reply(reply::bad_request);
+						boost::asio::async_write(m_Socket, m_Reply.to_buffers(),
+							boost::bind(&Connection::handle_write, shared_from_this(),
+							boost::asio::placeholders::error));
+						return;
+					}
+					jreq["net_id"] = this->m_nConnId;
+					gateSvr.on_http_req(this, jreq);
+				}
+				else if (!result)
+				{
+					m_Reply = reply::stock_reply(reply::bad_request);
+					boost::asio::async_write(m_Socket, m_Reply.to_buffers(),					
+						boost::bind(&Connection::handle_write, shared_from_this(),
+						boost::asio::placeholders::error));
+				}
+				else
+				{
+					m_Socket.async_read_some(boost::asio::buffer(m_ReadBuffer),	
+						boost::bind(&Connection::handle_read, shared_from_this(),
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred));
+				}
+			}
+			else
+			{
+				//Ê§°Ü·µ»Øbad request
+			}
 		}
 
 		void Connection::handle_write(const boost::system::error_code& e)
@@ -101,5 +169,11 @@ namespace my
 				//http_conn_mgr->stop(this->connection_id);
 			}
 		}
+
+		bool Connection::is_uri_header_correct(string uri)
+		{
+			return uri.find("/service") == 0;
+		}
+
 	}
 }
