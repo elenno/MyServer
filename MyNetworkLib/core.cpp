@@ -4,7 +4,7 @@ my::Core::Core()
 {
 	m_ServicePool.clear();
 	m_WorkPool.clear();
-	m_nPoolSize = 4;
+	m_nPoolSize = 1;
 	m_nNextIndex = 0;
 	
 	for (int i = 0; i < m_nPoolSize; i++)

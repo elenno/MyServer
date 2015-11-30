@@ -6,6 +6,7 @@
 #include <boost/thread/detail/singleton.hpp>
 
 #define mysqlSvr boost::detail::thread::singleton<my::MysqlServer>::instance()
+#define __SERVER_NAME__ "mysql"
 
 namespace my
 {

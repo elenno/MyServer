@@ -9,6 +9,7 @@
 #include "message.h"
 #include "http_common.hpp"
 #include "request_parser.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 
 
 using namespace boost::asio;
@@ -27,6 +28,7 @@ namespace my
 
 		public:
 			void writeMsg(NetMessage& msg);
+			void writeResourceMsg(std::string& content);
 			void readMsg();
 			ip::tcp::socket& getSocket();
 			void start();
@@ -39,7 +41,8 @@ namespace my
 		private:
 			void handle_read(const boost::system::error_code& e, std::size_t bytes_transferred);
 			void handle_write(const boost::system::error_code& e);
-			bool is_uri_header_correct(string uri);
+			bool Connection::is_service_command(string uri);
+			bool Connection::is_request_resource(string uri);
 
 		private:
 			ip::tcp::socket m_Socket;
@@ -53,6 +56,8 @@ namespace my
 			reply m_Reply;
 			request_parser m_RequestParser;
 			request m_Request;
+			boost::recursive_mutex m_ReadMtx;
+			boost::recursive_mutex m_WriteMtx;
 		};
 	}
 }

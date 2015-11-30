@@ -12,11 +12,6 @@
 
 #define addzero(NUM) ((NUM) < 10 ? "0" : "")
 
-static const std::string log_debug = "log/debug/";
-static const std::string log_warn = "log/warn/";   //要改为读入配置文件
-static const std::string log_info = "log/info/";
-static const std::string log_error = "log/error/";
-
 #define LogEnd \
 	std::endl;     \
 	logSys.endline(log_ss, log_color, log_path, *log_pdate);\
@@ -31,25 +26,25 @@ static const std::string log_error = "log/error/";
 #define LogD \
 	do{\
         int log_color = util::LogSystem::GREEN;\
-        std::string log_path = log_debug;\
+        std::string log_path = util::log_debug;\
 	    LogProcess
 
 #define LogW \
 	do{\
 	    int log_color = util::LogSystem::YELLOW;\
-	    std::string log_path = log_warn;\
+	    std::string log_path = util::log_warn;\
 	    LogProcess
 
 #define LogI \
 	do{\
 	    int log_color = util::LogSystem::GRAY;\
-	    std::string log_path = log_info;\
+	    std::string log_path = util::log_info;\
 	    LogProcess
 
 #define LogE \
 	do{\
 	    int log_color = util::LogSystem::PINK;\
-		std::string log_path = log_error;\
+		std::string log_path = util::log_error;\
 		LogProcess
 
 namespace util
@@ -61,15 +56,21 @@ namespace util
 		tm date;
 	};
 
+	static const std::string log_debug = "log/debug/";
+	static const std::string log_warn = "log/warn/";   //要改为读入配置文件
+	static const std::string log_info = "log/info/";
+	static const std::string log_error = "log/error/";
+
 	class LogSystem
 	{
 	public:
+
 		LogSystem();
 		~LogSystem();
 
 		std::stringstream& logProcess(std::stringstream& s, const char* fileName, unsigned int lineNum, const char* funcName, tm& date);
 		void endline(std::stringstream& s, int color, std::string dir, tm& date);
-		
+		inline void setServerName(std::string name);
 		enum Color {    
 			DARKBLUE = 1, 
 			DARKGREEN, 
@@ -98,6 +99,7 @@ namespace util
 		boost::recursive_mutex m_LogMutex;
 		std::queue<LogData> m_LogQueue; // todo  make a thread to write log into the file which in the queue 
 		boost::shared_ptr<boost::thread> m_QueueThreadPtr;
+		std::string m_ServerName;
 	};
 }
 

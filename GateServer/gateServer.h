@@ -15,7 +15,7 @@
 
 using namespace boost::asio;
 #define gateSvr boost::detail::thread::singleton<my::GateServer>::instance()
-
+#define __SERVER_NAME__ "gate"
 #define MAX_NET_ID 2147483647
 
 namespace my

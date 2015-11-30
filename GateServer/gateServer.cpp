@@ -347,13 +347,27 @@ void my::GateServer::on_http_req(http::Connection* connPtr, Json::Value& reqJson
 {
 	//proto 和 player_id可夹带在header中带过来   
 	//如何判断是gm后台的请求还是玩家请求！remote_ip?加密？session_id
+	int protoId = 0;
+	int playerId = 0;
+	try 
+	{
+		protoId = boost::lexical_cast<int, std::string>(reqJson["proto"].asString());
+		playerId = boost::lexical_cast<int, std::string>(reqJson["playerId"].asString());
+	}
+	catch (std::exception& e)
+	{
+		LogE << "caught exception:" << e.what() << LogEnd;
+	}
+	
+	LogW << "playerId:" << playerId << LogEnd;
 	NetMessage msg;
-	msg.setProto(reqJson["proto"].asInt());
+	msg.setProto(protoId);
 	msg.setNetId(connPtr->get_connection_id());
-	msg.setPlayerId(reqJson["player_id"].asInt());
+	msg.setPlayerId(playerId);
 	reqJson.removeMember("proto");
 	reqJson.removeMember("player_id");
 	std::string msgStr = reqJson.toStyledString();
+	LogW << msgStr << LogEnd;
 	msg.setMessage(msgStr);
 	m_pGameConn->sendMessage(msg);
 }

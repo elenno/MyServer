@@ -1,5 +1,6 @@
 #include "connection_manager.h"
 #include "connection.h"
+#include "log_system.h"
 
 namespace my
 {
@@ -19,6 +20,7 @@ namespace my
 		void ConnectionManager::start( Connection::ptr conn )
 		{
 			conn->set_connection_id(getNextConnId());
+			LogD << "new incomming conn:" << conn->get_connection_id() << LogEnd;
 			m_ConnectionMap[conn->get_connection_id()] = conn;
 			m_ConnectionMap[conn->get_connection_id()]->start();
 		}

@@ -25,12 +25,11 @@ namespace my
 			//init
 			try
 			{
-				std::string port = gateConfig["httpSvrPort"].asString();
+				int iport = gateConfig["httpSvrPort"].asInt();
 				std::string doc_root = gateConfig["httpDocRoot"].asString();
-				int iport = boost::lexical_cast<int, std::string>(port);
-				m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getHttpService(), tcp::endpoint(tcp::v4(), iport)));
-				m_pAcceptor->set_option(tcp::acceptor::reuse_address(true)); //why set to reuse??
-				m_pAcceptor->listen(); //why listen?
+				m_pAcceptor = AcceptorPtr(new boost::asio::ip::tcp::acceptor(core.getService(), tcp::endpoint(tcp::v4(), iport)));
+				//m_pAcceptor->set_option(tcp::acceptor::reuse_address(true)); //why set to reuse??
+				//m_pAcceptor->listen(); //why listen?
 				startAccept();
 			}
 			catch (std::exception& e)
@@ -62,6 +61,10 @@ namespace my
 			if (!e)
 			{
 				httpConnMgr.start(cPtr);
+			}
+			else
+			{
+				LogW << "error_code:" << e.message() << LogEnd;
 			}
 			startAccept();
 		}

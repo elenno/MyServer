@@ -12,6 +12,7 @@
 
 util::LogSystem::LogSystem()
 {
+	setServerName("server");
     m_QueueThreadPtr = boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(&LogSystem::runQueue, this)));
 	m_QueueThreadPtr->detach();
 }
@@ -39,7 +40,7 @@ void util::LogSystem::outputLogToFile(std::string& dir, std::string& content, tm
 {
 	std::stringstream ss;
 	std::fstream fs;
-	ss << dir << (1900 + date.tm_year) << addzero(date.tm_mon + 1) << (date.tm_mon + 1) << addzero(date.tm_mday) << date.tm_mday << addzero(date.tm_hour) << date.tm_hour << ".log";
+	ss << dir << m_ServerName << "_" << (1900 + date.tm_year) << addzero(date.tm_mon + 1) << (date.tm_mon + 1) << addzero(date.tm_mday) << date.tm_mday << addzero(date.tm_hour) << date.tm_hour << ".log";
 	std::string strtmp = ss.str();
 	fs.open(strtmp.c_str(), std::ios::out | std::ios::app);
 	fs << content << std::endl;
@@ -78,4 +79,9 @@ void util::LogSystem::runQueue()
 			m_LogQueue.pop();
 		}		
 	}
+}
+
+void util::LogSystem::setServerName(std::string name)
+{
+	m_ServerName = name;
 }

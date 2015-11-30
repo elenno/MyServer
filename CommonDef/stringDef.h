@@ -11,8 +11,7 @@ namespace my
 {
 	namespace jsonconf
 	{
-		static const std::string server_config = "../config/static/server_config.json";
-		static const std::string log_config = "config/log_config.json";
+		static const std::string server_config = "./config/static/server_config.json";
 	}
 
 	namespace db

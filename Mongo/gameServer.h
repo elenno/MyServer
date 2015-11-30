@@ -9,6 +9,7 @@
 #include <boost/thread/detail/singleton.hpp>
 
 #define gameSvr boost::detail::thread::singleton<my::GameServer>::instance()
+#define __SERVER_NAME__ "game"
 
 namespace my
 {
